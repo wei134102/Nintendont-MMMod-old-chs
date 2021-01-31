@@ -48,9 +48,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 GRRLIB_ttfFont *myFont;
 GRRLIB_texImg *background;
 GRRLIB_texImg *screen_buffer;
-static bool bg_isWidescreen = false;
-static float bg_xScale = 1.0f;
-static int bg_xPos = 0;
+//static bool bg_isWidescreen = false;
+//static float bg_xScale = 1.0f;
+//static int bg_xPos = 0;
 
 u32 POffset;
 
@@ -177,7 +177,7 @@ static unsigned int font_ttf_size = 0;
  */
 void Initialise(bool autoboot)
 {
-	int i;
+//	int i;
 	AUDIO_Init(NULL);
 	DSP_Init();
 	AUDIO_StopDMA();
@@ -191,7 +191,7 @@ void Initialise(bool autoboot)
 	screen_buffer = GRRLIB_CreateEmptyTexture(rmode->fbWidth, rmode->efbHeight);
 
 	// Calculate the background image scale.
-	bg_isWidescreen = (CONF_GetAspectRatio() == CONF_ASPECT_16_9);
+/*	bg_isWidescreen = (CONF_GetAspectRatio() == CONF_ASPECT_16_9);
 	if (bg_isWidescreen)
 	{
 		// Widescreen. 0.75x scaling, 80px offset.
@@ -220,7 +220,7 @@ void Initialise(bool autoboot)
 		}
 		ClearScreen();
 	}
-	gprintf("Initialize Finished\r\n");
+*/	gprintf("Initialize Finished\r\n");
 }
 
 static void (*stub)() = (void*)0x80001800;
@@ -276,7 +276,7 @@ void ExitToLoader(int ret)
 	GRRLIB_Render();
 	gprintf("Exiting Nintendont...\r\n");
 	sleep(3);
-	GRRLIB_FreeTexture(background);
+//	GRRLIB_FreeTexture(background);
 	GRRLIB_FreeTexture(screen_buffer);
 	GRRLIB_FreeTTF(myFont);
 	GRRLIB_Exit();
@@ -304,7 +304,7 @@ void ExitToLoader(int ret)
 
 void LoaderShutdown()
 {
-	GRRLIB_FreeTexture(background);
+//	GRRLIB_FreeTexture(background);
 	GRRLIB_FreeTexture(screen_buffer);
 	GRRLIB_FreeTTF(myFont);
 	GRRLIB_Exit();
@@ -361,13 +361,13 @@ bool LoadNinCFG(void)
 
 inline void ClearScreen()
 {
-	if (bg_isWidescreen)
+/*	if (bg_isWidescreen)
 	{
 		// Clear the sides.
 		GRRLIB_Rectangle(0, 0, 80, 480, RGBA(222, 223, 224, 255), true);
 		GRRLIB_Rectangle(80+480, 0, 80, 480, RGBA(222, 223, 224, 255), true);
 	}
-	GRRLIB_DrawImg(bg_xPos, 0, background, 0, bg_xScale, 1, RGBA(255, 255, 255, 255));
+*/	GRRLIB_DrawImg(0, 0, background, 0, 1, 1, RGBA(255, 255, 255, 255));
 }
 
 static inline char ascii(char s)

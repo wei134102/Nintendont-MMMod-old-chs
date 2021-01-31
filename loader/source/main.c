@@ -52,6 +52,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ff_utf8.h"
 #include "diskio.h"
 // from diskio.c
+
+#include "mysterio.h"
+
 extern DISC_INTERFACE *driver[_VOLUMES];
 
 extern void __exception_setreload(int t);
@@ -513,11 +516,11 @@ static u32 CheckForMultiGameAndRegion(unsigned int CurDICMD, u32 *ISOShift, u32 
 			PrintInfo();
 			PrintButtonActions(NULL, "Select", NULL, NULL);
 			static const int subheader_x = (640 - (40*10)) / 2;
-			PrintFormat(DEFAULT_SIZE, BLACK, subheader_x, MENU_POS_Y + 20*3,
+			PrintFormat(DEFAULT_SIZE, text_color, subheader_x, MENU_POS_Y + 20*3,
 				    "Select a game from this multi-game disc:");
 			for (i = 0; i < gamecount; ++i)
 			{
-				const u32 color = gameIsUnaligned[i] ? MAROON : BLACK;
+				const u32 color = gameIsUnaligned[i] ? MAROON : text_color;
 				PrintFormat(DEFAULT_SIZE, color, MENU_POS_X, MENU_POS_Y + 20*4 + i * 20, "%50.50s [%.6s]%s", 
 					    gi[i].Name, gi[i].ID, i == PosX ? ARROW_LEFT : " " );
 			}
@@ -611,8 +614,8 @@ int main(int argc, char **argv)
 	if(!isWiiVC)
 	{
 		// Preparing IOS58 Kernel...
-		if(argsboot == false)
-			ShowMessageScreen("Preparing IOS58 Kernel...");
+//		if(argsboot == false)
+//			ShowMessageScreen("Preparing IOS58 Kernel...");
 
 		u32 u;
 		//Disables MEMPROT for patches
@@ -654,8 +657,8 @@ int main(int argc, char **argv)
 		DCFlushRange( (void*)0x939F0348, sizeof(ESBootPatch) );
 
 		// Loading IOS58 Kernel...
-		if(argsboot == false)
-			ShowMessageScreen("Loading IOS58 Kernel...");
+//		if(argsboot == false)
+//			ShowMessageScreen("Loading IOS58 Kernel...");
 
 		//libogc still has that, lets close it
 		__ES_Close();
@@ -677,8 +680,8 @@ int main(int argc, char **argv)
 	//}
 
 	// Preparing Nintendont Kernel...
-	if(argsboot == false)
-		ShowMessageScreen("Preparing Nintendont Kernel...");
+//	if(argsboot == false)
+//		ShowMessageScreen("Preparing Nintendont Kernel...");
 
 	//inject nintendont thread
 	void *kernel_bin = NULL;
@@ -692,8 +695,8 @@ int main(int argc, char **argv)
 	memcpy((void*)0x92FFFE00,kernelboot_bin,kernelboot_bin_size);
 	DCFlushRange((void*)0x92FFFE00,kernelboot_bin_size);
 	//Loading Nintendont Kernel...
-	if(argsboot == false)
-		ShowMessageScreen("Loading Nintendont Kernel...");
+//	if(argsboot == false)
+//		ShowMessageScreen("Loading Nintendont Kernel...");
 	//close in case this is wii vc
 	__ES_Close();
 	memset( STATUS, 0, 0x20 );
@@ -711,8 +714,8 @@ int main(int argc, char **argv)
 	fd = IOS_Open( dev_es, 0 );
 	IOS_IoctlvAsync(fd, 0x1F, 0, 0, IOCTL_Buf, NULL, NULL);
 	//Waiting for Nintendont...
-	if(argsboot == false)
-		ShowMessageScreen("Waiting for Nintendont...");
+//	if(argsboot == false)
+//		ShowMessageScreen("Waiting for Nintendont...");
 	while(1)
 	{
 		DCInvalidateRange( STATUS, 0x20 );
@@ -729,8 +732,8 @@ int main(int argc, char **argv)
 	KernelLoaded = 1;
 
 	// Checking for storage devices...
-	if(argsboot == false)
-		ShowMessageScreen("Checking storage devices...");
+//	if(argsboot == false)
+//		ShowMessageScreen("Checking storage devices...");
 
 	// Initialize devices.
 	// TODO: Only mount the device Nintendont was launched from
@@ -786,6 +789,9 @@ int main(int argc, char **argv)
 
 	// Update meta.xml.
 	updateMetaXml();
+	
+	CustomBackground();
+    int loaderMode = -1;
 
 	if(argsboot == false)
 	{
@@ -804,26 +810,40 @@ int main(int argc, char **argv)
 		}
 
 		// Prevent autobooting if B is pressed
+		//modifications here are done because of wiiflow mastermod...
 		int i = 0;
 		while((ncfg->Config & NIN_CFG_AUTO_BOOT) && i < 1000000) // wait for wiimote re-synch
 		{
 			if (i == 0) {
-				PrintInfo();
-				PrintFormat(DEFAULT_SIZE, BLACK, 320 - 90, MENU_POS_Y + 20*10, "B: Cancel Autoboot");
-				GRRLIB_Render();
-				ClearScreen();
+                loaderMode = checkTheme();
+                if (loaderMode == 0) {
+                    PrintInfo();
+                    PrintFormat(DEFAULT_SIZE, text_color, 320 - 90, MENU_POS_Y + 20*10, "B: Cancel Autoboot");
+                    GRRLIB_Render();
+                    ClearScreen();
+                }
 			}
 			
 			FPAD_Update();
 
 			if (FPAD_Cancel(0)) {
 				ncfg->Config &= ~NIN_CFG_AUTO_BOOT;
+				//reverse loaded theme...
+				GRRLIB_Screen2Texture(0, 0, screen_buffer, GX_FALSE);
+				FadeOut(screen_buffer);
+				CustomBackground();
 				break;
 			}
 
 			i++;
 		}
 	}
+	
+	if (!(ncfg->Config & NIN_CFG_AUTO_BOOT)){
+		FadeIn(background);
+		ClearScreen();
+	}
+	
 	ReconfigVideo(rmode);
 	UseSD = (ncfg->Config & NIN_CFG_USB) == 0;
 
@@ -844,9 +864,10 @@ int main(int argc, char **argv)
 	{
 		// Autobooting.
 		gprintf("Autobooting:\"%s\"\r\n", ncfg->GamePath );
-		PrintInfo();
+//		PrintInfo();
+		PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*5, "."); //FIXME: this fixes a black background if autobooting :D
 		GRRLIB_Render();
-		ClearScreen();
+//		ClearScreen();
 	}
 
 //Init DI and set correct ID if needed
@@ -1189,6 +1210,11 @@ int main(int argc, char **argv)
 		}
 	}
 
+	//check and eventually load loader theme
+	if (loaderMode == -1) //-1 means that not checked until now
+        loaderMode = checkTheme();
+    loaderTheme(ncfg->Config & NIN_CFG_AUTO_BOOT, loaderMode);
+	
 	//sync changes
 	CloseDevices();
 
@@ -1235,29 +1261,28 @@ int main(int argc, char **argv)
 		if( STATUS_LOADING == 0xdeadbeef )
 			break;
 
-		if(argsboot == false)
-		{
+		if(loaderMode == 0){
 			PrintInfo();
 
-			PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*6, "Loading patched kernel... %d", STATUS_LOADING);
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*6, "Loading patched kernel... %d", STATUS_LOADING);
 			if(STATUS_LOADING == 0)
 			{
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*7, "ES_Init...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*7, "ES_Init...");
 				// Cleans the -1 when it's past it to avoid confusion if another error happens. e.g. before it showed "81" instead of "8" if the controller was unplugged.
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X + 163, MENU_POS_Y + 20*6, " ");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 163, MENU_POS_Y + 20*6, " ");
 			}
 			if((STATUS_LOADING > 0 || abs(STATUS_LOADING) > 1) && STATUS_LOADING < 20)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*7, "ES_Init... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*7, "ES_Init... Done!");
 			if(STATUS_LOADING == 2)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices...");
 			if(abs(STATUS_LOADING) > 2 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices... Done!");
 			if(STATUS_LOADING == -2)
 				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices... Error! %d  Shutting down", STATUS_ERROR);
 			if(STATUS_LOADING == 3)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device...");
 			if(abs(STATUS_LOADING) > 3 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device... Done!");
 			if(STATUS_LOADING == -3)
 				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device... Error! %d  Shutting down", STATUS_ERROR);
 			if(STATUS_LOADING == 5) {
@@ -1271,49 +1296,49 @@ int main(int argc, char **argv)
 					//DCFlushRange( (void*)0x92f00000, 0x100000 );
 					//ExitToLoader(1);
 				}*/
-				PrintFormat(DEFAULT_SIZE, (STATUS_ERROR == -7) ? MAROON:BLACK, MENU_POS_X, MENU_POS_Y + 20*10, (STATUS_ERROR == -7) ? "Checking FS... Timeout!" : "Checking FS...");
+				PrintFormat(DEFAULT_SIZE, (STATUS_ERROR == -7) ? MAROON:text_color, MENU_POS_X, MENU_POS_Y + 20*10, (STATUS_ERROR == -7) ? "Checking FS... Timeout!" : "Checking FS...");
 			}
 			if(abs(STATUS_LOADING) > 5 && abs(STATUS_LOADING) < 20)
 			{
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*10, "Checking FS... Done!");
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*11, "Drive size: %.02f%s Sector size: %d", STATUS_DRIVE, STATUS_GB_MB ? "GB" : "MB", STATUS_SECTOR);
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*10, "Checking FS... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*11, "Drive size: %.02f%s Sector size: %d", STATUS_DRIVE, STATUS_GB_MB ? "GB" : "MB", STATUS_SECTOR);
 			}
 			if(STATUS_LOADING == -5)
 				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "Checking FS... Error! %d Shutting down", STATUS_ERROR);
 			if(STATUS_LOADING == 6)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules...");
 			if(abs(STATUS_LOADING) > 6 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules... Done!");
 			if(STATUS_LOADING == -6)
 				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules... Error! %d Shutting down", STATUS_ERROR);
 			if(STATUS_LOADING == 7)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*13, "Loading config...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13, "Loading config...");
 			if(abs(STATUS_LOADING) > 7 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*13, "Loading config... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13, "Loading config... Done!");
 			/*if(STATUS_LOADING == 8)
 			{
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... ");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... ");
 				if ( STATUS_ERROR == 1)
 				{
-					PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*15, "          Make sure the Controller is plugged in");
+					PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*15, "          Make sure the Controller is plugged in");
 				}
 				else
-					PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*15, "%50s", " ");
+					PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*15, "%50s", " ");
 			}
 			if(abs(STATUS_LOADING) > 8 && abs(STATUS_LOADING) < 20)
 			{
 				if (ncfg->Config & NIN_CFG_NATIVE_SI)
-					PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using ONLY NATIVE Gamecube Ports");
+					PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using ONLY NATIVE Gamecube Ports");
 				else if ((ncfg->MaxPads == 1) && (ncfg->Config & NIN_CFG_HID))
-					PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using Gamecube and HID Ports");
+					PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using Gamecube and HID Ports");
 				else if ((ncfg->MaxPads > 0) && (ncfg->Config & NIN_CFG_HID))
-					PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using Gamecube, HID, and BT Ports");
+					PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using Gamecube, HID, and BT Ports");
 				else if (ncfg->MaxPads > 0)
-					PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using Gamecube and BT Ports");
+					PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using Gamecube and BT Ports");
 				else if (ncfg->Config & NIN_CFG_HID)
-					PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using HID and Bluetooth Ports");
+					PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using HID and Bluetooth Ports");
 				else
-					PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using Bluetooth Ports... Done!");
+					PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... Using Bluetooth Ports... Done!");
 			}
 			if(STATUS_LOADING == -8)
 			{
@@ -1347,13 +1372,60 @@ int main(int argc, char **argv)
 				}
 			}*/
 			if(STATUS_LOADING == 9)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*14, "Init DI... %40s", " ");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init DI... %40s", " ");
 			if(abs(STATUS_LOADING) > 9 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*14, "Init DI... Done! %35s", " ");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init DI... Done! %35s", " ");
 			if(STATUS_LOADING == 10)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*15, "Init CARD...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*15, "Init CARD...");
 			if(abs(STATUS_LOADING) > 10 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*15, "Init CARD... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*15, "Init CARD... Done!");
+			GRRLIB_Screen2Texture(0, 0, screen_buffer, GX_FALSE); // Copy all status messages
+			GRRLIB_Render();
+			ClearScreen();
+		}
+		else if(loaderMode == 1) //only show errors
+		{
+			if(STATUS_LOADING == -2)
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices... Error! %d  Shutting down", STATUS_ERROR);
+			if(STATUS_LOADING == -3)
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device... Error! %d  Shutting down", STATUS_ERROR);
+			if(STATUS_LOADING == 5) {
+				PrintFormat(DEFAULT_SIZE, (STATUS_ERROR == -7) ? MAROON:text_color, MENU_POS_X, MENU_POS_Y + 20*10, (STATUS_ERROR == -7) ? "Checking FS... Timeout!" : "");
+			}
+			if(STATUS_LOADING == -5)
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "Checking FS... Error! %d Shutting down", STATUS_ERROR);
+			if(STATUS_LOADING == -6)
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules... Error! %d Shutting down", STATUS_ERROR);
+			GRRLIB_Screen2Texture(0, 0, screen_buffer, GX_FALSE); // Copy all status messages
+			GRRLIB_Render();
+			ClearScreen();
+		}
+		else if(loaderMode == 2) //show loading bar instead of text
+		{
+			if((STATUS_LOADING > 0 || abs(STATUS_LOADING) > 1) && STATUS_LOADING < 20)
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50*1, MENU_POS_Y + 20*19, "\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88");
+			if(abs(STATUS_LOADING) > 2 && abs(STATUS_LOADING) < 20)
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 100*1, MENU_POS_Y + 20*19, "\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88");
+			if(STATUS_LOADING == -2)
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices... Error! %d  Shutting down", STATUS_ERROR);
+			if(abs(STATUS_LOADING) > 3 && abs(STATUS_LOADING) < 20)
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 150*1, MENU_POS_Y + 20*19, "\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88");
+			if(STATUS_LOADING == -3)
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device... Error! %d  Shutting down", STATUS_ERROR);
+			if(abs(STATUS_LOADING) > 5 && abs(STATUS_LOADING) < 20)
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 200*1, MENU_POS_Y + 20*19, "\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88");
+			if(STATUS_LOADING == -5)
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "Checking FS... Error! %d Shutting down", STATUS_ERROR);
+			if(abs(STATUS_LOADING) > 6 && abs(STATUS_LOADING) < 20)
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 250*1, MENU_POS_Y + 20*19, "\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88");
+			if(STATUS_LOADING == -6)
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules... Error! %d Shutting down", STATUS_ERROR);
+			if(abs(STATUS_LOADING) > 7 && abs(STATUS_LOADING) < 20)
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 300*1, MENU_POS_Y + 20*19, "\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88");
+			if(abs(STATUS_LOADING) > 9 && abs(STATUS_LOADING) < 20)
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 350*1, MENU_POS_Y + 20*19, "\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88");
+			if(abs(STATUS_LOADING) > 10 && abs(STATUS_LOADING) < 20)
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 400*1, MENU_POS_Y + 20*19, "\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88");
 			GRRLIB_Screen2Texture(0, 0, screen_buffer, GX_FALSE); // Copy all status messages
 			GRRLIB_Render();
 			ClearScreen();
@@ -1361,15 +1433,33 @@ int main(int argc, char **argv)
 		while((STATUS_LOADING < -1) && (STATUS_LOADING > -20)) //displaying a fatal error
 				; //do nothing wait for shutdown
 	}
-	if(argsboot == false)
+	if(loaderMode == 0)
 	{
 		DrawBuffer(); // Draw all status messages
-		PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*17, "Nintendont kernel looping, loading game...");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*17, "Nintendont kernel looping, loading game...");
+		GRRLIB_Render();
+		GRRLIB_Screen2Texture(0, 0, screen_buffer, GX_FALSE); // Copy all status messages
+		DrawBuffer(); // Draw all status messages
+	}
+	else if(loaderMode == 1)
+	{
+		DrawBuffer(); // Draw all status messages
+		GRRLIB_Render();
+		DrawBuffer(); // Draw all status messages
+	}
+	else if(loaderMode == 2)
+	{
+		DrawBuffer(); // Draw all status messages
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 450*1, MENU_POS_Y + 20*19, "\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88\xe2\x96\x88");
 		GRRLIB_Render();
 		DrawBuffer(); // Draw all status messages
 	}
 //	memcpy( (void*)0x80000000, (void*)0x90140000, 0x1200000 );
-	GRRLIB_FreeTexture(background);
+	
+	if (!useipl && (!(ncfg->Config & (NIN_CFG_SKIP_IPL))))
+		Animation();
+	
+	//GRRLIB_FreeTexture(background);
 	GRRLIB_FreeTexture(screen_buffer);
 	GRRLIB_FreeTTF(myFont);
 	GRRLIB_Exit();

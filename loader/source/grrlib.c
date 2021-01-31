@@ -29,9 +29,9 @@ THE SOFTWARE.
 #include <ft2build.h>
 #include <pngu.h>
 #include <stdio.h>
-#ifdef ENABLE_JPEG
+
 #include <jpeglib.h>
-#endif
+
 #include <string.h>
 
 
@@ -43,7 +43,7 @@ THE SOFTWARE.
 
 #define DEFAULT_FIFO_SIZE (256 * 1024) /**< GX fifo buffer size. */
 
-//#define ENABLE_JPEG
+#define ENABLE_JPEG
 #define ENABLE_TTF
 
 GRRLIB_drawSettings  GRRLIB_Settings;

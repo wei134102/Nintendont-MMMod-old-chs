@@ -44,6 +44,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "unzip/miniunz.h"
 #include "unzip/ioapi.h"
 
+#include "themes.h"
+#include "mysterio.h"
+
 extern char launch_dir[MAXPATHLEN];
 
 typedef struct {
@@ -54,7 +57,9 @@ typedef struct {
 } downloads_t;
 
 typedef enum {
-	DOWNLOAD_NINTENDONT = 0,
+	DOWNLOAD_MYSTERIO = 0,
+	DOWNLOAD_MASTERMOD,
+	DOWNLOAD_NINTENDONT,
 	DOWNLOAD_TITLES,
 	DOWNLOAD_CONTROLLERS,
 	DOWNLOAD_GAMECUBE_MD5,
@@ -62,11 +67,13 @@ typedef enum {
 } DOWNLOADS;
 
 static const downloads_t Downloads[] = {
+	{"http://send0r.lima-city.de/Nintendont/Mr.%20Mysterio's%20Mod/boot.dol", "Downloading MMMod", "boot.dol", 0x700000}, // 7MB
+	{"http://send0r.lima-city.de/Nintendont/MasterMod/boot.dol", "Downloading MasterMod", "boot.dol", 0x400000}, // 4MB
 	{"https://raw.githubusercontent.com/FIX94/Nintendont/master/loader/loader.dol", "Updating Nintendont", "boot.dol", 0x400000}, // 4MB
 	{"https://raw.githubusercontent.com/FIX94/Nintendont/master/nintendont/titles.txt", "Updating titles.txt", "titles.txt", 0x80000}, // 512KB
 	{"https://raw.githubusercontent.com/FIX94/Nintendont/master/controllerconfigs/controllers.zip", "Updating controllers.zip", "controllers.zip", 0x8000}, // 32KB
 	{"https://raw.githubusercontent.com/FIX94/Nintendont/master/nintendont/gcn_md5.zip", "Updating gcn_md5.txt", "gcn_md5.zip", 0x20000}, // 128 KB
-	{"https://raw.githubusercontent.com/FIX94/Nintendont/master/common/include/NintendontVersion.h", "Checking Latest Version", "", 0x400} // 1KB
+	{"http://send0r.lima-city.de/Nintendont/Mr.%20Mysterio's%20Mod/NintendontVersion.h", "Checking Latest Version", "", 0x400} // 1KB
 };
 
 extern void changeToDefaultDrive();
@@ -115,11 +122,11 @@ static inline bool LatestVersion(int *major, int *minor, int *current_line) {
 	unsigned int filesize;
 	int line = *current_line;
 
-	PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, Downloads[DOWNLOAD_VERSION].text);
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, Downloads[DOWNLOAD_VERSION].text);
 	UpdateScreen();
 	line++;
 	if(!http_request(Downloads[DOWNLOAD_VERSION].url, Downloads[DOWNLOAD_VERSION].max_size)) {
-		PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, "Failed to retrieve version");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Failed to retrieve version");
 		UpdateScreen();
 		*current_line = line;
 		return false;
@@ -139,9 +146,9 @@ static inline bool LatestVersion(int *major, int *minor, int *current_line) {
 	if (outbuf != NULL) free(outbuf);
 	if ((*major <= NIN_MAJOR_VERSION) && (*minor <= NIN_MINOR_VERSION)) {
 		bool still_download = true;
-		PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, "You already have the latest version");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "You already have the latest version");
 		line++;
-		PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, "Download anyway? (A: Yes, B: No)");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Download anyway? (A: Yes, B: No)");
 		line++;
 		UpdateScreen();
 		while(true) {
@@ -184,7 +191,7 @@ static s32 Download(DOWNLOADS download_number)  {
 	PrintInfo();
 
 	snprintf(filepath, sizeof(filepath), "%s%s", dir, Downloads[download_number].filename);
-	PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, Downloads[download_number].text);
+    PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, Downloads[download_number].text);
 	UpdateScreen();
 
 	line++;
@@ -197,14 +204,14 @@ static s32 Download(DOWNLOADS download_number)  {
 		goto end;
 	}
 	gprintf("Network Initialized\r\n");
-	PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, "Network Initialized");
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Network Initialized");
 	UpdateScreen();
 	ssl_init(); //only once needed
 	line++;
-	if (download_number == DOWNLOAD_NINTENDONT) {
+	if (download_number == DOWNLOAD_MYSTERIO) {
 		ret = LatestVersion(&major, &minor, &line);
 		if (!ret) {
-			PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, "Download Cancelled");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Download Cancelled");
 			UpdateScreen();
 			if (outbuf != NULL) free(outbuf);
 			net_deinit();
@@ -212,10 +219,14 @@ static s32 Download(DOWNLOADS download_number)  {
 			return 0;
 		}
 
-		PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, "Downloading Nintendont v%i.%i", major, minor);
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Downloading Nintendont v%i.%i", major, minor);
 		UpdateScreen();
 		line++;
 	}
+	
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Downloading...");
+	UpdateScreen();
+	line++;
 
 	int i;
 	for (i = 0; i <= 10; i++) {
@@ -237,7 +248,7 @@ static s32 Download(DOWNLOADS download_number)  {
 		goto end;
 	}
 
-	PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, "Download Complete");
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Download Complete");
 	UpdateScreen();
 	line++;
 	if (!dir_argument_exists) {
@@ -294,7 +305,7 @@ static s32 Download(DOWNLOADS download_number)  {
 		}
 	}
 	if (ret == 1) {
-		PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, "Update Complete");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Update Complete");
 		UpdateScreen();
 		line++;
 	}
@@ -303,7 +314,7 @@ end:
 	if (ret != 1) {
 		PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*line, "Update Error: %s", errmsg);
 	} else {
-		PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*line, "Restart Nintendont to complete update");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Restart Nintendont to complete update");
 	}
 	UpdateScreen();
 	if (outbuf != NULL) free(outbuf);
@@ -320,14 +331,18 @@ void UpdateNintendont(void) {
 	while (true) {
 		if (redraw) {
 			PrintInfo();
-			PrintButtonActions("Go Back", "Update", NULL, NULL);
+            PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*3, "Update Menu");
+			PrintButtonActions("Go Back", "Select", NULL, NULL);
 
 			// Update menu.
-			PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X + 50, MENU_POS_Y + 20*5, "Download Nintendont");
-			PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X + 50, MENU_POS_Y + 20*6, "Download titles.txt");
-			PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X + 50, MENU_POS_Y + 20*7, "Download controllers.zip");
-			PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X + 50, MENU_POS_Y + 20*8, "Download gcn_md5.txt");
-			PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X + 35, MENU_POS_Y + 20*(5+selected), ARROW_RIGHT);
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*5, "Update MMMod");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*6, "Download MasterMod (discontinued)");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*7, "Download official Nintendont");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*8, "Download titles.txt");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*9, "Download controllers.zip");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*10, "Download gcn_md5.txt");
+            PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*12, "Theme Menu");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 35, MENU_POS_Y + 20*(5+selected), ARROW_RIGHT);
 			redraw = false;
 
 			// Render the screen here to prevent a blank frame
@@ -344,21 +359,32 @@ void UpdateNintendont(void) {
 			if (selected <= DOWNLOAD_GAMECUBE_MD5) {
 				Download(selected);
 				ClearScreen();
-				redraw = true;
 			} else {
-				break;
+				ThemeMenu();
 			}
+			
+			redraw = true;
 		} else if (FPAD_Start(0)) {
 			break;
 		} else if (FPAD_Down(1)) {
 			delay = ticks_to_millisecs(gettime()) + 150;
 			selected++;
-			if (selected > 3) selected = 0;
+            if (selected == 6) {
+                selected++;
+            } else if (selected > 7) {
+                selected = 0;
+            }
+            
 			redraw = true;
 		} else if (FPAD_Up(1)) {
 			delay = ticks_to_millisecs(gettime()) + 150;
 			selected--;
-			if (selected < 0) selected = 3;
+            if (selected == 6) {
+                selected--;
+            } else if (selected < 0) {
+                selected = 7;
+            }
+            
 			redraw = true;
 		}
 	}
