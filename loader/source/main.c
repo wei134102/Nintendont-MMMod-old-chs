@@ -864,10 +864,11 @@ int main(int argc, char **argv)
 	{
 		// Autobooting.
 		gprintf("Autobooting:\"%s\"\r\n", ncfg->GamePath );
-//		PrintInfo();
-		PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*5, "."); //FIXME: this fixes a black background if autobooting :D
-		GRRLIB_Render();
-//		ClearScreen();
+        //this aparently can break some vc autoboot issues
+        //PrintInfo();
+		//PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*5, "."); //FIXME: this fixes a black background if autobooting :D
+		//GRRLIB_Render();
+        //ClearScreen();
 	}
 
 //Init DI and set correct ID if needed
