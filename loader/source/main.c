@@ -866,8 +866,7 @@ int main(int argc, char **argv)
 		gprintf("Autobooting:\"%s\"\r\n", ncfg->GamePath );
         //this aparently can break some vc autoboot issues
         //PrintInfo();
-		//PrintFormat(DEFAULT_SIZE, BLACK, MENU_POS_X, MENU_POS_Y + 20*5, "."); //FIXME: this fixes a black background if autobooting :D
-		//GRRLIB_Render();
+		GRRLIB_Render(); // This prevents that noise is shown on autoboot before the loading bar.
         //ClearScreen();
 	}
 
