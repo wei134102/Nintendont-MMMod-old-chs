@@ -158,7 +158,14 @@ typedef enum {
     //NinBlack.png
     DOWNLOAD_NINBLACK,
     //Preview.zip
-    PREVIEW
+    PREVIEW,
+    //Custom Game Loader Themes
+    CGL_THEMES_1,
+    CGL_THEMES_2,
+    CGL_THEMES_3,
+    CGL_THEMES_4,
+    CGL_THEMES_5,
+    CGL_THEMES_6
 } DOWNLOADS;
 
 static const downloads_t Downloads[] = {
@@ -267,7 +274,14 @@ static const downloads_t Downloads[] = {
     //NinBlack.png
     {"http://send0r.lima-city.de/Nintendont/themes/NinBlack.png", "Downloading Black Screen for Game Boot", "NinBlack.png", 0x1000}, // 4KB
     //Preview.zip
-    {"http://send0r.lima-city.de/Nintendont/themes/Preview.zip", "Downloading Preview Files", "Preview.zip", 0x500000} // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/Preview.zip", "Downloading Preview Files", "Preview.zip", 0x500000}, // 5MB
+    //CustomGameLoaders
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader1.zip", "Downloading Custom Game Loader Themes Part 1/6", "CustomGameLoader1.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader2.zip", "Downloading Custom Game Loader Themes Part 2/6", "CustomGameLoader2.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader3.zip", "Downloading Custom Game Loader Themes Part 3/6", "CustomGameLoader3.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader4.zip", "Downloading Custom Game Loader Themes Part 4/6", "CustomGameLoader4.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader5.zip", "Downloading Custom Game Loader Themes Part 5/6", "CustomGameLoader5.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader6.zip", "Downloading Custom Game Loader Themes Part 6/6", "CustomGameLoader6.zip", 0x500000}, // 5MB
 };
 
 //took code from update.c (sorry, but why reinvent the wheel?)
@@ -1177,15 +1191,17 @@ void ThemeMenu() {
             PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*10, "Download Unicolor Themes");
             PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*11, "Set Black Screen on Game Boot");
             PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*12, "Download Preview Pack");
+            PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*13, "Download Custom Game Loader Themes");
+
             if (previewDownloaded) {
                 if (previewState) {
-                    PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*14, "Preview Pack: Enabled");
+                    PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*15, "Preview Pack: Enabled");
                 } else {
-                    PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*14, "Preview Pack: Disabled");
+                    PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*15, "Preview Pack: Disabled");
                 }
             }
             
-            PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*15, "Restore Default Theme");
+            PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*16, "Restore Default Theme");
             PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 35, MENU_POS_Y + 20*(5+selected), ARROW_RIGHT);
             
             
@@ -1232,13 +1248,27 @@ void ThemeMenu() {
                         previewDownloaded = true;
                         previewState = PreviewEnabled();
                     }
-                    
+
                     ClearScreen();
                     break;
-                case 9:
-                    previewState = SetPreview(previewState);
+                case 8:
+                    Download(CGL_THEMES_1);
+                    ClearScreen();
+                    Download(CGL_THEMES_2);
+                    ClearScreen();
+                    Download(CGL_THEMES_3);
+                    ClearScreen();
+                    Download(CGL_THEMES_4);
+                    ClearScreen();
+                    Download(CGL_THEMES_5);
+                    ClearScreen();
+                    Download(CGL_THEMES_6);
+                    ClearScreen();
                     break;
                 case 10:
+                    previewState = SetPreview(previewState);
+                    break;
+                case 11:
                     RestoreDefault();
                     break;
                 default:
@@ -1251,11 +1281,11 @@ void ThemeMenu() {
         } else if (FPAD_Down(1)) {
             delay = ticks_to_millisecs(gettime()) + 150;
             selected++;
-            if (selected == 8 && previewDownloaded) {
+            if (selected == 9 && previewDownloaded) {
                 selected++;
-            } else if (selected == 8 && !previewDownloaded) {
+            } else if (selected == 9 && !previewDownloaded) {
                 selected += 2;
-            } else if (selected > 10) {
+            } else if (selected > 11) {
                 selected = 0;
             }
             
@@ -1263,12 +1293,12 @@ void ThemeMenu() {
         } else if (FPAD_Up(1)) {
             delay = ticks_to_millisecs(gettime()) + 150;
             selected--;
-            if (selected == 8 && previewDownloaded) {
+            if (selected == 9 && previewDownloaded) {
                 selected--;
-            } else if (selected == 9 && !previewDownloaded) {
+            } else if (selected == 10 && !previewDownloaded) {
                 selected -= 2;
             } else if (selected < 0) {
-                selected = 10;
+                selected = 11;
             }
             
             redraw = true;
