@@ -1617,10 +1617,10 @@ static bool UpdateSettingsMenu(MenuCtx *ctx)
 	
 		// Controller slot for the Wii U gamepad.
 		if (ncfg->WiiUGamepadSlot < NIN_CFG_MAXPAD) {
-			PrintFormat(MENU_SIZE, (IsWiiU() ? BLACK : DARK_GRAY), MENU_POS_X+320, SettingY(ListLoopIndex),
+			PrintFormat(MENU_SIZE, (IsWiiU() ? text_color : DARK_GRAY), MENU_POS_X+320, SettingY(ListLoopIndex),
 					"%-18s:%d", "WiiU Gamepad Slot", (ncfg->WiiUGamepadSlot + 1));
 		} else {
-			PrintFormat(MENU_SIZE, (IsWiiU() ? BLACK : DARK_GRAY), MENU_POS_X+320, SettingY(ListLoopIndex),
+			PrintFormat(MENU_SIZE, (IsWiiU() ? text_color : DARK_GRAY), MENU_POS_X+320, SettingY(ListLoopIndex),
 			"%-18s:%-4s", "WiiU Gamepad Slot", "None");	
 		}
 		ListLoopIndex++;
