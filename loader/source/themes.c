@@ -165,7 +165,10 @@ typedef enum {
     CGL_THEMES_3,
     CGL_THEMES_4,
     CGL_THEMES_5,
-    CGL_THEMES_6
+    CGL_THEMES_6,
+    CGL_THEMES_7,
+    CGL_THEMES_8,
+    CGL_THEMES_9
 } DOWNLOADS;
 
 static const downloads_t Downloads[] = {
@@ -276,12 +279,15 @@ static const downloads_t Downloads[] = {
     //Preview.zip
     {"http://send0r.lima-city.de/Nintendont/themes/Preview.zip", "Downloading Preview Files", "Preview.zip", 0x500000}, // 5MB
     //CustomGameLoaders
-    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader1.zip", "Downloading Custom Game Loader Themes Part 1/6", "CustomGameLoader1.zip", 0x500000}, // 5MB
-    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader2.zip", "Downloading Custom Game Loader Themes Part 2/6", "CustomGameLoader2.zip", 0x500000}, // 5MB
-    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader3.zip", "Downloading Custom Game Loader Themes Part 3/6", "CustomGameLoader3.zip", 0x500000}, // 5MB
-    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader4.zip", "Downloading Custom Game Loader Themes Part 4/6", "CustomGameLoader4.zip", 0x500000}, // 5MB
-    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader5.zip", "Downloading Custom Game Loader Themes Part 5/6", "CustomGameLoader5.zip", 0x500000}, // 5MB
-    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader6.zip", "Downloading Custom Game Loader Themes Part 6/6", "CustomGameLoader6.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader1.zip", "Downloading Custom Game Loader Themes Part 1/9", "CustomGameLoader1.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader2.zip", "Downloading Custom Game Loader Themes Part 2/9", "CustomGameLoader2.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader3.zip", "Downloading Custom Game Loader Themes Part 3/9", "CustomGameLoader3.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader4.zip", "Downloading Custom Game Loader Themes Part 4/9", "CustomGameLoader4.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader5.zip", "Downloading Custom Game Loader Themes Part 5/9", "CustomGameLoader5.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader6.zip", "Downloading Custom Game Loader Themes Part 6/9", "CustomGameLoader6.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader7.zip", "Downloading Custom Game Loader Themes Part 7/9", "CustomGameLoader7.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader8.zip", "Downloading Custom Game Loader Themes Part 8/9", "CustomGameLoader8.zip", 0x500000}, // 5MB
+    {"http://send0r.lima-city.de/Nintendont/themes/CustomGameLoader9.zip", "Downloading Custom Game Loader Themes Part 9/9", "CustomGameLoader9.zip", 0x500000}, // 5MB
 };
 
 //took code from update.c (sorry, but why reinvent the wheel?)
@@ -1202,6 +1208,7 @@ void ThemeMenu() {
             }
             
             PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*16, "Restore Default Theme");
+            PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*19, "Custom Game Loader Themes provided by TastifulBurger");
             PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 35, MENU_POS_Y + 20*(5+selected), ARROW_RIGHT);
             
             
@@ -1219,6 +1226,7 @@ void ThemeMenu() {
         }
         
         if (FPAD_OK(0)) {
+            int i;
             switch(selected) {
                 case 0:
                     LoaderMenu(previewState);
@@ -1252,18 +1260,11 @@ void ThemeMenu() {
                     ClearScreen();
                     break;
                 case 8:
-                    Download(CGL_THEMES_1);
-                    ClearScreen();
-                    Download(CGL_THEMES_2);
-                    ClearScreen();
-                    Download(CGL_THEMES_3);
-                    ClearScreen();
-                    Download(CGL_THEMES_4);
-                    ClearScreen();
-                    Download(CGL_THEMES_5);
-                    ClearScreen();
-                    Download(CGL_THEMES_6);
-                    ClearScreen();
+                    for (i = CGL_THEMES_1; i <= CGL_THEMES_9; i++)
+                    {
+                        Download(i);
+                        ClearScreen();
+                    }                    
                     break;
                 case 10:
                     previewState = SetPreview(previewState);
