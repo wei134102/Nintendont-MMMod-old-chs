@@ -70,14 +70,14 @@ static void showProgress(unsigned int written, unsigned int total)
 
 	// First line.
 	len = snprintf(buf, sizeof(buf),
-		"Initializing virtual %u-block memory card...",
+		"初始化 %u 个块的记忆卡...",
 		MEM_CARD_BLOCKS(ncfg->MemCardBlocks));
 	x = (640 - (len*10)) / 2;
 	PrintFormat(DEFAULT_SIZE, BLACK, x, 232-20, "%s", buf);
 
 	// Second line.
 	len = snprintf(buf, sizeof(buf),
-		"%u of %u KiB written",
+		"写入了 %u  总数 %u ",
 		written / 1024, total / 1024);
 	x = (640 - (len*10)) / 2;
 	PrintFormat(DEFAULT_SIZE, BLACK, x, 232+20, "%s", buf);

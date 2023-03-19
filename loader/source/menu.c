@@ -239,7 +239,7 @@ static bool IsDiscImageValid(const char *filename, int discNumber, gameinfo *gi)
 				// Multi-game disc.
 				char *name = (char*)malloc(65);
 				const char *slash_pos = strrchr(filename, '/');
-				snprintf(name, 65, "Multi-Game Disc (%s)", (slash_pos ? slash_pos+1 : filename));
+				snprintf(name, 65, "合集游戏 (%s)", (slash_pos ? slash_pos+1 : filename));
 				gi->Name = name;
 				gi->Flags = GIFLAG_FORMAT_MULTI | GIFLAG_NAME_ALLOC;
 			}
@@ -313,7 +313,7 @@ static DevState LoadGameList(gameinfo *gi, u32 sz, u32 *pGameCount)
 		// Pseudo game for booting a GameCube disc on Wii VC.
 		gi[0].ID[0] = 'D',gi[0].ID[1] = 'I',gi[0].ID[2] = 'S';
 		gi[0].ID[3] = 'C',gi[0].ID[4] = '0',gi[0].ID[5] = '1';
-		gi[0].Name = "Boot included GC Disc";
+		gi[0].Name = "从光驱中读取游戏";
 		gi[0].Revision = 0;
 		gi[0].Flags = 0;
 		gi[0].Path = strdup("di:di");
@@ -324,7 +324,7 @@ static DevState LoadGameList(gameinfo *gi, u32 sz, u32 *pGameCount)
 		// Pseudo game for booting a GameCube disc on Wii.
 		gi[0].ID[0] = 'D',gi[0].ID[1] = 'I',gi[0].ID[2] = 'S';
 		gi[0].ID[3] = 'C',gi[0].ID[4] = '0',gi[0].ID[5] = '1';
-		gi[0].Name = "Boot GC Disc in Drive";
+		gi[0].Name = "从光驱中启动GC游戏";
 		gi[0].Revision = 0;
 		gi[0].Flags = 0;
 		gi[0].Path = strdup("di:di");
@@ -732,11 +732,11 @@ static bool UpdateGameSelectMenu(MenuCtx *ctx)
 		// TODO: Only if menuMode or scrollX has changed?
 
 		if (!cColor){// Print the color codes.
-            PrintFormat(DEFAULT_SIZE, DiscFormatColors[0], MENU_POS_X, MENU_POS_Y + 20*3, "Colors  : 1:1");
-            PrintFormat(DEFAULT_SIZE, DiscFormatColors[1], MENU_POS_X+(14*10), MENU_POS_Y + 20*3, "Shrunk");
-            PrintFormat(DEFAULT_SIZE, DiscFormatColors[2], MENU_POS_X+(21*10), MENU_POS_Y + 20*3, "FST");
-            PrintFormat(DEFAULT_SIZE, DiscFormatColors[3], MENU_POS_X+(25*10), MENU_POS_Y + 20*3, "CISO");
-            PrintFormat(DEFAULT_SIZE, DiscFormatColors[4], MENU_POS_X+(30*10), MENU_POS_Y + 20*3, "Multi");
+		PrintFormat(DEFAULT_SIZE, DiscFormatColors[0], MENU_POS_X, MENU_POS_Y + 20*3, "Colors  : 1:1");
+		PrintFormat(DEFAULT_SIZE, DiscFormatColors[1], MENU_POS_X+(14*10), MENU_POS_Y + 20*3, "Shrunk");
+		PrintFormat(DEFAULT_SIZE, DiscFormatColors[2], MENU_POS_X+(21*10), MENU_POS_Y + 20*3, "FST");
+		PrintFormat(DEFAULT_SIZE, DiscFormatColors[3], MENU_POS_X+(25*10), MENU_POS_Y + 20*3, "CISO");
+		PrintFormat(DEFAULT_SIZE, DiscFormatColors[4], MENU_POS_X+(30*10), MENU_POS_Y + 20*3, "Multi");
 		}
 		// Starting position.
 		int gamelist_y = MENU_POS_Y + 20*5 + 10;
@@ -760,18 +760,28 @@ static bool UpdateGameSelectMenu(MenuCtx *ctx)
 			if (discNumber == 0)
 			{
 				// Disc 1.
+				//PrintFormat(DEFAULT_SIZE, color, MENU_POS_X, gamelist_y,
+				//	    "%50.50s [%.6s]%s",
+				//	    gi->Name, gi->ID,
+				//	    i == ctx->games.posX ? ARROW_LEFT : " ");
+
 				PrintFormat(DEFAULT_SIZE, color, MENU_POS_X, gamelist_y,
-					    "%50.50s [%.6s]%s",
-					    gi->Name, gi->ID,
+					    "[%.6s]%-s%s",
+					    gi->ID, gi->Name,
 					    i == ctx->games.posX ? ARROW_LEFT : " ");
 			}
 			else
 			{
 				// Disc 2 or higher.
+				//PrintFormat(DEFAULT_SIZE, color, MENU_POS_X, gamelist_y,
+				//	    "%46.46s (%d) [%.6s]%s",
+				//	    gi->Name, discNumber+1, gi->ID,
+				//	    i == ctx->games.posX ? ARROW_LEFT : " ");
+
 				PrintFormat(DEFAULT_SIZE, color, MENU_POS_X, gamelist_y,
-					    "%46.46s (%d) [%.6s]%s",
-					    gi->Name, discNumber+1, gi->ID,
-					    i == ctx->games.posX ? ARROW_LEFT : " ");
+					    "[%.6s]%-s (%d) %s",
+					    gi->ID, gi->Name, discNumber+1,
+					    i == ctx->games.posX ? ARROW_LEFT : " ");				
 			}
 		}
 
@@ -833,12 +843,13 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_CFG_BIT_MEMCARDEMU: {
 				static const char *desc_mcemu[] = {
-					"Emulates a memory card in",
-					"Slot A using a .raw file.",
+					" ",
+					"使用一个.raw文件来模拟",
+					"插槽A当中的记忆卡.",
 					"",
-					"Disable this option if you",
-					"want to use a real memory",
-					"card on an original Wii.",
+					"如果你想使用Wii实机的",
+					"真实的记忆卡",
+					"可以关闭这个选项.",
 					NULL
 				};
 				return desc_mcemu;
@@ -849,15 +860,16 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_CFG_BIT_FORCE_WIDE: {
 				static const char *const desc_force_wide[] = {
-					"Patch games to use a 16:9",
-					"aspect ratio. (widescreen)",
+					" ",
+					"强制游戏以16:9的",
+					"屏幕比率运行(宽屏)",
 					"",
-					"Not all games support this",
-					"option. The patches will not",
-					"be applied to games that have",
-					"built-in support for 16:9;",
-					"use the game's options screen",
-					"to configure the display mode.",
+					"不是所有游戏都支持",
+					"如果游戏内部就支持",
+					"16:9屏幕比率运行",
+					"这个选项是无效的",
+					"请使用游戏当中的选项",
+					"来调整显示模式.",
 					NULL
 				};
 				return desc_force_wide;
@@ -865,11 +877,12 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_CFG_BIT_FORCE_PROG: {
 				static const char *const desc_force_prog[] = {
-					"Patch games to always use 480p",
-					"(progressive scan) output.",
+					" ",
+					"强制游戏以480p",
+					"(逐行扫描)输出.",
 					"",
-					"Requires component cables, or",
-					"an HDMI cable on Wii U.",
+					"需要色差线",
+					"或者HDMI线.",
 					NULL
 				};
 				return desc_force_prog;
@@ -880,16 +893,15 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_CFG_BIT_REMLIMIT: {
 				static const char *desc_remlimit[] = {
-					"Disc read speed is normally",
-					"limited to the performance of",
-					"the original GameCube disc",
-					"drive.",
+					" ",
+					"磁盘读取速度限制为",
+					"和真实的GC读取速度一致.",
 					"",
-					"Unlocking read speed can allow",
-					"for faster load times, but it",
-					"can cause problems with games",
-					"that are extremely sensitive",
-					"to disc read timing.",
+					"取消限制可以",
+					"提高读取速度",
+					"但是对于那些",
+					"读盘时间敏感的游戏",
+					"可能会出现问题.",
 					NULL
 				};
 				return desc_remlimit;
@@ -900,16 +912,17 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_CFG_BIT_USB: {	// WiiU Widescreen
 				static const char *desc_wiiu_widescreen[] = {
-					"On Wii U, Nintendont sets the",
-					"display to 4:3, which results",
-					"in bars on the sides of the",
-					"screen. If playing a game that",
-					"supports widescreen, enable",
-					"this option to set the display",
-					"back to 16:9.",
+					" ",
+					"对于Wii U, Nintendont设置成4:3",
+					"会导致屏幕两侧",
+					"出现黑边.",
+					"如果游戏本来支持",
+					"宽屏显示",
+					"打开这个选项",
+					"使游戏以16:9运行.",
 					"",
-					"This option has no effect on",
-					"original Wii systems.",
+					"对于Wii实机",
+					"这个选项是无效的.",
 					NULL
 				};
 				return desc_wiiu_widescreen;
@@ -917,16 +930,17 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_CFG_BIT_LED: {
 				static const char *desc_led[] = {
-					"Use the drive slot LED as a",
-					"disk activity indicator.",
+					" ",
+					"使用LED灯作为",
+					"磁盘活动的指示.",
 					"",
-					"The LED will be turned on",
-					"when reading from or writing",
-					"to the storage device.",
+					"LED灯将被打开",
+					"在读取或者",
+					"写入数据的时候.",
 					"",
-					"This option has no effect on",
-					"Wii U, since the Wii U does",
-					"not have a drive slot LED.",
+					"这个选项对于WiiU",
+					"是无效的",
+					"因为WiiU就没有LED灯.",
 					NULL
 				};
 				return desc_led;
@@ -937,16 +951,17 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_SETTINGS_MAX_PADS: {
 				static const char *desc_max_pads[] = {
-					"Set the maximum number of",
-					"native GameCube controller",
-					"ports to use on Wii.",
+					" ",
+					"设置最大的Gc手柄",
+					"连接的数量.",
 					"",
-					"This should usually be kept",
-					"at 4 to enable all ports",
+					"这个选项通常要设置成4",
+					"来确保模拟所有借口",
 					"",
-					"This option has no effect on",
-					"Wii U and Wii Family Edition",
-					"systems.",
+					"对于WiiU和Wii家庭编辑系统",
+					"这个选项是无效的",
+					"因为他们的上面",
+					"没有GC手柄接口.",
 					NULL
 				};
 				return desc_max_pads;
@@ -954,12 +969,13 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_SETTINGS_LANGUAGE: {
 				static const char *desc_language[] = {
-					"Set the system language.",
+					" ",
+					"设置系统语言.",
 					"",
-					"This option is normally only",
-					"found on PAL GameCubes, so",
-					"it usually won't have an",
-					"effect on NTSC games.",
+					"这个选项通常用在",
+					"PAL制式的GameCubes上,",
+					"因此对于NTSC游戏",
+					"是无效的.",
 					NULL
 				};
 				return desc_language;
@@ -971,12 +987,13 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_SETTINGS_MEMCARDBLOCKS: {
 				static const char *desc_memcard_blocks[] = {
-					"Default size for new memory",
-					"card images.",
+					" ",
+					"新做成的记忆卡的",
+					"容量大小.",
 					"",
-					"NOTE: Sizes larger than 251",
-					"blocks are known to cause",
-					"issues.",
+					"注意: 超过251大小",
+					"的时候,",
+					"可能会发生错误.",
 					NULL
 				};
 				return desc_memcard_blocks;
@@ -984,15 +1001,16 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_SETTINGS_MEMCARDMULTI: {
 				static const char *desc_memcard_multi[] = {
-					"Nintendont usually uses one",
-					"emulated memory card image",
-					"per game.",
+					" ",
+					"通常, Nintendont对于",
+					"每一个游戏",
+					"生成一个记忆卡文件.",
 					"",
-					"Enabling MULTI switches this",
-					"to use one memory card image",
-					"for all USA and PAL games,",
-					"and one image for all JPN",
-					"games.",
+					"打开这个选项后",
+					"所有的USA和PAL制式",
+					"的游戏使用一个文件",
+					"所有JPN制式的游戏",
+					"使用另一个文件.",
 					NULL
 				};
 				return desc_memcard_multi;
@@ -1000,16 +1018,17 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 
 			case NIN_SETTINGS_NATIVE_SI: {
 				static const char *desc_native_si[] = {
-					"Native Control allows use of",
-					"GBA link cables on original",
-					"Wii systems.",
+					" ",
+					"控制Wii系统可以",
+					"使用GBA连接线.",
 					"",
-					"NOTE: Enabling Native Control",
-					"will disable Bluetooth and",
-					"USB HID controllers.",
+					"注意: 打开这个选项",
+					"会关闭蓝牙和",
+					"USB HID控制器.",
 					"",
-					"This option is not available",
-					"on Wii U.",
+					"这个选项在WiiU上无效",
+					"因为WiiU上面",
+					"没有GC手柄接口.",
 					NULL
 				};
 				return desc_native_si;
@@ -1024,12 +1043,12 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 			case 3: {
 				// Triforce Arcade Mode
 				static const char *desc_tri_arcade[] = {
-					"Arcade Mode re-enables the",
-					"coin slot functionality of",
-					"Triforce games.",
+					" ",
+					"对于Triforce的游戏",
+					"打开投币的功能.",
 					"",
-					"To insert a coin, move the",
-					"C stick in any direction.",
+					"使用C摇杆向任意方向按下",
+					"来模拟投币.",
 					NULL
 				};
 				return desc_tri_arcade;
@@ -1038,10 +1057,11 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 			case 4: {
 				// Wiimote CC Rumble
 				static const char *desc_cc_rumble[] = {
-					"Enable rumble on Wii Remotes",
-					"when using the Wii Classic",
-					"Controller or Wii Classic",
-					"Controller Pro.",
+					" ",
+					"当使用Wii Classic",
+					"或者Wii Classic Pro",
+					"手柄的时候",
+					"打开Wii手柄的震动.",
 					NULL
 				};
 				return desc_cc_rumble;
@@ -1050,9 +1070,10 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 			case 5: {
 				// Skip IPL
 				static const char *desc_skip_ipl[] = {
-					"Skip loading the GameCube",
-					"IPL, even if it's present",
-					"on the storage device.",
+					" ",
+					"跳过读取GameCube的IPL",
+					"即使它存在于",
+					"磁盘驱动器当中.",
 					NULL
 				};
 				return desc_skip_ipl;
@@ -1061,9 +1082,10 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 			case 6: {
 				// BBA Emulation
 				static const char *desc_skip_bba[] = {
-					"Enable BBA Emulation in the",
-					"following supported titles",
-					"including all their regions:",
+					" ",
+					"启用BBA Emulation",
+					"仅支持以下游戏",
+					"的所有区域版本:",
 					"",
 					"Mario Kart: Double Dash!!",
 					"Kirby Air Ride",
@@ -1079,15 +1101,14 @@ static const char *const *GetSettingsDescription(const MenuCtx *ctx)
 			case 7: {
 				// BBA Network Profile
 				static const char *desc_skip_netprof[] = {
-					"Force a Network Profile",
-					"to use for BBA Emulation,",
-					"this option only works on",
-					"the original Wii because",
-					"on Wii U the profiles are",
-					"managed by the Wii U Menu.",
-					"This means you can even",
-					"use profiles that cannot",
-					"connect to the internet.",
+					" ",
+					"强制使用网络配置文件用于",
+					"BBA Emulation,该选项仅适",
+					"用于WII,在WIIU上由WIIU菜",
+					"单管理.",
+					"这意味着你甚至可以使用无",
+					"法连接到互联网的配置文件",
+					".",
 					NULL
 				};
 				return desc_skip_netprof;
@@ -1450,7 +1471,7 @@ static bool UpdateSettingsMenu(MenuCtx *ctx)
 			if (ListLoopIndex == NIN_CFG_BIT_USB) {
 				// USB option is replaced with Wii U widescreen.
 				PrintFormat(MENU_SIZE, (IsWiiU() ? text_color : DARK_GRAY), MENU_POS_X+50, SettingY(ListLoopIndex),
-					    "%-18s:%s", OptionStrings[ListLoopIndex], (ncfg->Config & (NIN_CFG_WIIU_WIDE)) ? "On " : "Off");
+					    "%-18s:%s", OptionStrings[ListLoopIndex], (ncfg->Config & (NIN_CFG_WIIU_WIDE)) ? "打开" : "关闭");
 			} else {
 				u32 item_color = text_color;
 				if (IsWiiU() &&
@@ -1462,7 +1483,7 @@ static bool UpdateSettingsMenu(MenuCtx *ctx)
 					item_color = DARK_GRAY;
 				}
 				PrintFormat(MENU_SIZE, item_color, MENU_POS_X+50, SettingY(ListLoopIndex),
-					    "%-18s:%s", OptionStrings[ListLoopIndex], (ncfg->Config & (1 << ListLoopIndex)) ? "On " : "Off" );
+					    "%-18s:%s", OptionStrings[ListLoopIndex], (ncfg->Config & (1 << ListLoopIndex)) ? "打开" : "关闭" );
 			}
 		}
 
@@ -1538,9 +1559,9 @@ static bool UpdateSettingsMenu(MenuCtx *ctx)
 				MemCardBlocksVal = 0;
 			}
 			PrintFormat(MENU_SIZE, text_color, MENU_POS_X + 50, SettingY(ListLoopIndex),
-				    "%-18s:%-4d%s", OptionStrings[ListLoopIndex], MEM_CARD_BLOCKS(MemCardBlocksVal), MemCardBlocksVal > 2 ? "Unstable" : "");
+				    "%-18s:%-4d%s", OptionStrings[ListLoopIndex], MEM_CARD_BLOCKS(MemCardBlocksVal), MemCardBlocksVal > 2 ? "不稳定" : "");
 			PrintFormat(MENU_SIZE, text_color, MENU_POS_X + 50, SettingY(ListLoopIndex+1),
-				    "%-18s:%-4s", OptionStrings[ListLoopIndex+1], (ncfg->Config & (NIN_CFG_MC_MULTI)) ? "On " : "Off");
+				    "%-18s:%-4s", OptionStrings[ListLoopIndex+1], (ncfg->Config & (NIN_CFG_MC_MULTI)) ? "打开" : "关闭");
 		}
 		ListLoopIndex+=2;
 
@@ -1548,7 +1569,7 @@ static bool UpdateSettingsMenu(MenuCtx *ctx)
 		// TODO: Gray out on RVL-101?
 		PrintFormat(MENU_SIZE, (IsWiiU() ? DARK_GRAY : text_color), MENU_POS_X + 50, SettingY(ListLoopIndex),
 			    "%-18s:%-4s", OptionStrings[ListLoopIndex],
-			    (ncfg->Config & (NIN_CFG_NATIVE_SI)) ? "On " : "Off");
+			    (ncfg->Config & (NIN_CFG_NATIVE_SI)) ? "打开" : "关闭");
 		ListLoopIndex++;
 
 		/** Right column **/
@@ -1558,7 +1579,7 @@ static bool UpdateSettingsMenu(MenuCtx *ctx)
 		char vidWidth[10];
 		if (ncfg->VideoScale < 40 || ncfg->VideoScale > 120) {
 			ncfg->VideoScale = 0;
-			snprintf(vidWidth, sizeof(vidWidth), "Auto");
+			snprintf(vidWidth, sizeof(vidWidth), "自动");
 		} else {
 			snprintf(vidWidth, sizeof(vidWidth), "%i", ncfg->VideoScale + 600);
 		}
@@ -1577,44 +1598,43 @@ static bool UpdateSettingsMenu(MenuCtx *ctx)
 			snprintf(netProfile, sizeof(netProfile), "%i", ncfg->NetworkProfile);
 
 		PrintFormat(MENU_SIZE, text_color, MENU_POS_X + 320, SettingY(ListLoopIndex),
-			    "%-18s:%-4s", "Video Width", vidWidth);
+			    "%-18s:%-4s", "显示宽度          ", vidWidth);
 		ListLoopIndex++;
 		PrintFormat(MENU_SIZE, text_color, MENU_POS_X + 320, SettingY(ListLoopIndex),
-			    "%-18s:%-4s", "Screen Position", vidOffset);
+			    "%-18s:%-4s", "屏幕位置          ", vidOffset);
 		ListLoopIndex++;
 
 		// Patch PAL60.
 		PrintFormat(MENU_SIZE, text_color, MENU_POS_X + 320, SettingY(ListLoopIndex),
-			    "%-18s:%-4s", "Patch PAL50", (ncfg->VideoMode & (NIN_VID_PATCH_PAL50)) ? "On " : "Off");
+			    "%-18s:%-4s", "PAL50补丁         ", (ncfg->VideoMode & (NIN_VID_PATCH_PAL50)) ? "打开" : "关闭");
 		ListLoopIndex++;
 
 		// Triforce Arcade Mode.
 		PrintFormat(MENU_SIZE, text_color, MENU_POS_X + 320, SettingY(ListLoopIndex),
-			    "%-18s:%-4s", "TRI Arcade Mode", (ncfg->Config & (NIN_CFG_ARCADE_MODE)) ? "On " : "Off");
+			    "%-18s:%-4s", "TRI街机模式       ", (ncfg->Config & (NIN_CFG_ARCADE_MODE)) ? "打开" : "关闭");
 		ListLoopIndex++;
 
 		// Wiimote CC Rumble
 		PrintFormat(MENU_SIZE, text_color, MENU_POS_X + 320, SettingY(ListLoopIndex),
-			    "%-18s:%-4s", "Wiimote CC Rumble", (ncfg->Config & (NIN_CFG_CC_RUMBLE)) ? "On " : "Off");
+			    "%-18s:%-4s", "Wiimote控制器 震动", (ncfg->Config & (NIN_CFG_CC_RUMBLE)) ? "打开" : "关闭");
 		ListLoopIndex++;
 
 		// Skip GameCube IPL
 		PrintFormat(MENU_SIZE, text_color, MENU_POS_X + 320, SettingY(ListLoopIndex),
-			    "%-18s:%-4s", "Skip IPL", (ncfg->Config & (NIN_CFG_SKIP_IPL)) ? "Yes" : "No ");
+			    "%-18s:%-4s", "跳过IPL           ", (ncfg->Config & (NIN_CFG_SKIP_IPL)) ? "是" : "否");
 		ListLoopIndex++;
 
 		// BBA Emulation
 		PrintFormat(MENU_SIZE, text_color, MENU_POS_X + 320, SettingY(ListLoopIndex),
-			    "%-18s:%-4s", "BBA Emulation", (ncfg->Config & (NIN_CFG_BBA_EMU)) ? "On" : "Off");
+			    "%-18s:%-4s", "BBA Emulation", (ncfg->Config & (NIN_CFG_BBA_EMU)) ? "打开" : "关闭");
 		ListLoopIndex++;
 
 		// BBA Network Profile
 		PrintFormat(MENU_SIZE, (IsWiiU() || !(ncfg->Config & (NIN_CFG_BBA_EMU))) ? DARK_GRAY : text_color,
 				MENU_POS_X + 320, SettingY(ListLoopIndex),
-			    "%-18s:%-4s", "Network Profile", netProfile);
+			    "%-18s:%-4s", "网络配置文件      ", netProfile);
 		ListLoopIndex++;
 
-	
 		// Controller slot for the Wii U gamepad.
 		if (ncfg->WiiUGamepadSlot < NIN_CFG_MAXPAD) {
 			PrintFormat(MENU_SIZE, (IsWiiU() ? text_color : DARK_GRAY), MENU_POS_X+320, SettingY(ListLoopIndex),
@@ -1627,18 +1647,30 @@ static bool UpdateSettingsMenu(MenuCtx *ctx)
 
 		// Draw the cursor.
 		u32 cursor_color = text_color;
-		if (ctx->settings.settingPart == 0) {
-			if ((!IsWiiU() && ctx->settings.posX == NIN_CFG_BIT_USB) ||
-			     (IsWiiU() && ctx->settings.posX == NIN_CFG_NATIVE_SI))
+		if (ctx->settings.settingPart == 0) 
+		{
+			if 
+			(
+				(!IsWiiU() && ctx->settings.posX == NIN_CFG_BIT_USB) ||
+				(IsWiiU() && ctx->settings.posX == NIN_CFG_NATIVE_SI)
+			)
 			{
 				// Setting is not usable on this platform.
 				// Gray out the cursor, too.
 				cursor_color = DARK_GRAY;
 			}
 			PrintFormat(MENU_SIZE, cursor_color, MENU_POS_X + 30, SettingY(ctx->settings.posX), ARROW_RIGHT);
-		} else {
-			if((IsWiiU() || !(ncfg->Config & (NIN_CFG_BBA_EMU))) && ctx->settings.posX == 7)
+		} 
+		else
+		{
+			if((IsWiiU() || !(ncfg->Config & (NIN_CFG_BBA_EMU))) && ctx->settings.posX == 7)			
 				cursor_color = DARK_GRAY;
+			
+			if(!IsWiiU() && ctx->settings.posX == 8)
+			{
+				cursor_color = DARK_GRAY;
+			}
+
 			PrintFormat(MENU_SIZE, cursor_color, MENU_POS_X + 300, SettingY(ctx->settings.posX), ARROW_RIGHT);
 		}
 
@@ -1804,18 +1836,18 @@ static int SelectGame(void)
 			if (ctx.menuMode == 0)
 			{
 				// Game List menu.
-				PrintButtonActions("Go Back", NULL, "Settings", NULL);
+				PrintButtonActions("返 回", NULL, "设 置", NULL);
 				// If the selected game bootable, enable "Select".
 				u32 color = ((ctx.games.canBeBooted) ? text_color : DARK_GRAY);
-				PrintFormat(DEFAULT_SIZE, color, MENU_POS_X + 430, MENU_POS_Y + 20*1, "A   : Select");
+				PrintFormat(DEFAULT_SIZE, color, MENU_POS_X + 430, MENU_POS_Y + 20*1, "A   : 选 择");
 				// If the selected game is not DISC01, enable "Game Info".
 				color = ((ctx.games.canShowInfo) ? text_color : DARK_GRAY);
-				PrintFormat(DEFAULT_SIZE, color, MENU_POS_X + 430, MENU_POS_Y + 20*3, "X/1 : Game Info");
+				PrintFormat(DEFAULT_SIZE, color, MENU_POS_X + 430, MENU_POS_Y + 20*3-1, "X/1 : 游戏信息");
 			}
 			else
 			{
 				// Settings menu.
-				PrintButtonActions("Go Back", "Select", "Settings", "Update");
+				PrintButtonActions("返 回", "选 择", "设 置", "更 新");
 			}
 
 			if (ctx.menuMode == 0 ||
@@ -1886,7 +1918,7 @@ bool SelectDevAndGame(void)
 		{
 			UseSD = (ncfg->Config & NIN_CFG_USB) == 0;
 			PrintInfo();
-			PrintButtonActions("Exit", "Select", NULL, NULL);
+			PrintButtonActions("退 出", "选 择", NULL, NULL);
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 53 * 6 - 8, MENU_POS_Y + 20 * 6, UseSD ? ARROW_LEFT : "");
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 53 * 6 - 8, MENU_POS_Y + 20 * 7, UseSD ? "" : ARROW_LEFT);
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 47 * 6 - 8, MENU_POS_Y + 20 * 6, " SD  ");
@@ -1909,7 +1941,7 @@ bool SelectDevAndGame(void)
 		}
 		else if (FPAD_Start(0))
 		{
-			ShowMessageScreenAndExit("Returning to loader...", 0);
+			ShowMessageScreenAndExit("返回到loader...", 0);
 		}
 		else if (FPAD_Down(0))
 		{
@@ -1973,8 +2005,8 @@ void PrintInfo(void)
 	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*0, "Nintendont Loader v%u.%u (%s)",
 		    NIN_VERSION>>16, NIN_VERSION&0xFFFF, consoleType);
 #endif
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*1, "Built   : " __DATE__ " " __TIME__);
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*2, "Firmware: %u.%u.%u",
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*1, "编译日期: " __DATE__ " " __TIME__);
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*2, "固件    : %u.%u.%u",
 		    *(vu16*)0x80003140, *(vu8*)0x80003142, *(vu8*)0x80003143);
 }
 
@@ -2001,7 +2033,7 @@ void PrintButtonActions(const char *btn_home, const char *btn_a, const char *btn
 		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 430, MENU_POS_Y + 20*2, "B   : %s", btn_b);
 	}
 	if (btn_x1) {
-		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 430, MENU_POS_Y + 20*3, "X/1 : %s", btn_x1);
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 430, MENU_POS_Y + 20*3-1, "X/1 : %s", btn_x1);
 	}
 }
 
@@ -2021,15 +2053,15 @@ static void PrintDevInfo(void)
 	switch (devState) {
 		case DEV_NO_OPEN:
 			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*4,
-				"WARNING: %s FAT device could not be opened.", s_devType);
+				"警告: 无法读取%s FAT设备", s_devType);
 			break;
 		case DEV_NO_GAMES:
 			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*4,
-				"WARNING: %s:/games/ was not found.", GetRootDevice());
+				"警告: 目录不存在： %s:/games/ ", GetRootDevice());
 			break;
 		case DEV_NO_TITLES:
 			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*4,
-				"WARNING: %s:/games/ contains no GC titles.", GetRootDevice());
+				"警告: 目录中不存在游戏： %s:/games/ ", GetRootDevice());
 			break;
 		default:
 			break;
@@ -2070,60 +2102,60 @@ void PrintLoadKernelError(LoadKernelError_t iosErr, int err)
 {
 	ClearScreen();
 	PrintInfo();
-	PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*4, "Failed to load IOS58 from NAND:");
+	PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*4, "加载IOS58失败:");
 
 	switch (iosErr)
 	{
 		case LKERR_UNKNOWN:
 		default:
 			// TODO: Add descriptions of more LoadKernel() errors.
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "LoadKernel() error %d occurred, returning %d.", iosErr, err);
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "加载核心方法中发生 %d 错误, 返回 %d.", iosErr, err);
 			break;
 
 		case LKERR_ES_GetStoredTMDSize:
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "ES_GetStoredTMDSize() returned %d.", err);
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "This usually means IOS58 is not installed.");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "ES_GetStoredTMDSize() 返回了 %d.", err);
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "这说明IOS58没有被安装.");
 			if (IsWiiU())
 			{
 				// No IOS58 on Wii U should never happen...
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*9, "WARNING: On Wii U, a missing IOS58 may indicate");
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "something is seriously wrong with the vWii setup.");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*9, "警告: 表明在Wii U上缺少IOS58");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "vWii的设置中，可能存在严重错误.");
 			}
 			else
 			{
 				// TODO: Check if we're using System 4.3.
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*9, "Please update to Wii System 4.3 and try running");
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "Nintendont again.");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*9, "请更新Wii的系统版本至4.3，");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "然后再次运行Nintendont.");
 			}
 			break;
 
 		case LKERR_TMD_malloc:
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "Unable to allocate memory for the IOS58 TMD.");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "无法从IOS58 TMD中分配内存.");
 			break;
 
 		case LKERR_ES_GetStoredTMD:
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "ES_GetStoredTMD() returned %d.", err);
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "WARNING: IOS58 may be corrupted.");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "ES_GetStoredTMD() 返回了 %d.", err);
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "警告: IOS58可能坏掉了.");
 			break;
 
 		case LKERR_IOS_Open_shared1_content_map:
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "IOS_Open(\"/shared1/content.map\") returned %d.", err);
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "This usually means Nintendont was not started with");
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*8, "AHB access permissions.");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "IOS_Open(\"/shared1/content.map\") 返回了 %d.", err);
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "通常情况下说明，Nintendont没有被赋予");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*8, "从AHB启动的权限.");
 			// FIXME: Create meta.xml if it isn't there?
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "Please ensure that meta.xml is present in your Nintendont");
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*11, "application directory and that it contains a line");
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*12, "with the tag <ahb_access/> .");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "请确保meta.xml存在于你的Nintendont应用程序目录中");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*11, "并确保它包含一个");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*12, "带有<ahb_access/>标签的行.");
 			break;
 
 		case LKERR_IOS_Open_IOS58_kernel:
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "IOS_Open(IOS58 kernel) returned %d.", err);
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "WARNING: IOS58 may be corrupted.");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "IOS_Open(IOS58核心) 返回了 %d.", err);
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "警告: IOS58可能坏掉了.");
 			break;
 
 		case LKERR_IOS_Read_IOS58_kernel:
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "IOS_Read(IOS58 kernel) returned %d.", err);
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "WARNING: IOS58 may be corrupted.");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "IOS_Open(IOS58核心) 返回了 %d.", err);
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "警告: IOS58可能坏掉了.");
 			break;
 	}
 }

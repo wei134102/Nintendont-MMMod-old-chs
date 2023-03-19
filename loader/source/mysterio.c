@@ -216,16 +216,21 @@ void FadeOut(GRRLIB_texImg *tex){
 	GRRLIB_Render();
 }
 
-void CustomBackground() {
+void CustomBackground() 
+{
 	GRRLIB_texImg *tempbg;
 	char path[MAXPATHLEN];
 	bool exists = strlen(launch_dir);
 	int i;
-	for (i = 0; i < 5; i++){
-		if (i != 0){
+
+	for (i = 0; i < 5; i++)
+	{
+		if (i != 0)
+		{
 			memset(path, 0, sizeof(path));
 		}
-		switch (i){	//set the different paths before trying to load
+		switch (i)
+		{	//set the different paths before trying to load
 			case 0:
 				snprintf(path, sizeof(path), "%sNinLegacy.png", exists? launch_dir : "/apps/Nintendont/");
 				text_color = WHITE;
@@ -243,20 +248,24 @@ void CustomBackground() {
 				snprintf(path, sizeof(path), "%sbackground.jpg", exists? launch_dir : "/apps/Nintendont/");
 				break;
             default:
-                if (background != NULL) {
+                if (background != NULL) 
+				{
                     GRRLIB_FreeTexture(background);
                 }
                 
                 background = GRRLIB_LoadTexturePNG(background_png);
+				text_color = WHITE; //默认颜色
                 break;
 		}
 		
 		//load background if file exists
-		if (i != 4) {
+		if (i != 4) 
+		{
 			tempbg = GRRLIB_LoadTextureFromFile(path);
         }
 		
-        if (tempbg != NULL){
+        if (tempbg != NULL)
+		{
 			GRRLIB_FreeTexture(background);
 			background = tempbg;
 //FIXME:	GRRLIB_FreeTexture(tempbg); freezes nintendont lol
@@ -269,7 +278,8 @@ void CustomBackground() {
 	snprintf(path, sizeof(path), "%stextcolor.ini", exists ? launch_dir : "/apps/Nintendont/");
 	FIL themefile;
 	char readColor[8];
-	if (f_open_char(&themefile, path, FA_READ|FA_OPEN_EXISTING) == FR_OK){
+	if (f_open_char(&themefile, path, FA_READ|FA_OPEN_EXISTING) == FR_OK)
+	{
 		UINT read;
 		f_read(&themefile, &readColor, 8, &read);
 		f_close(&themefile);

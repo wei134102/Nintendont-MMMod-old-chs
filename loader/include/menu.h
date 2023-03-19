@@ -92,7 +92,7 @@ void ShowMessageScreenAndExit(const char *msg, int ret)
 // Predefined messages.
 static inline void ShowLoadingScreen(void)
 {
-	ShowMessageScreen("Loading, please wait...");
+	ShowMessageScreen("加载中, 请等待...");
 }
 
 /**

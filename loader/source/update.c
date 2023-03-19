@@ -126,16 +126,16 @@ static inline bool LatestVersion(int *major, int *minor, int *current_line) {
 	UpdateScreen();
 	line++;
 	if(!http_request(Downloads[DOWNLOAD_VERSION].url, Downloads[DOWNLOAD_VERSION].max_size)) {
-		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Failed to retrieve version");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "检查版本失败");
 		UpdateScreen();
 		*current_line = line;
 		return false;
 	}
-	
+
 
 	http_get_result(&http_status, &outbuf, &filesize);
-	
-	if (((int)*outbuf & 0xF0000000) == 0xF0000000) 
+
+	if (((int)*outbuf & 0xF0000000) == 0xF0000000)
 	{
 		if (outbuf != NULL) free(outbuf);
 		*current_line = line;
@@ -146,9 +146,9 @@ static inline bool LatestVersion(int *major, int *minor, int *current_line) {
 	if (outbuf != NULL) free(outbuf);
 	if ((*major <= NIN_MAJOR_VERSION) && (*minor <= NIN_MINOR_VERSION)) {
 		bool still_download = true;
-		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "You already have the latest version");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "现在的版本就是最新的");
 		line++;
-		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Download anyway? (A: Yes, B: No)");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "还要更新吗? (A: 是, B: 否)");
 		line++;
 		UpdateScreen();
 		while(true) {
@@ -191,7 +191,7 @@ static s32 Download(DOWNLOADS download_number)  {
 	PrintInfo();
 
 	snprintf(filepath, sizeof(filepath), "%s%s", dir, Downloads[download_number].filename);
-    PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, Downloads[download_number].text);
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, Downloads[download_number].text);
 	UpdateScreen();
 
 	line++;
@@ -200,18 +200,18 @@ static s32 Download(DOWNLOADS download_number)  {
 	if (ret < 0) {
 		gprintf("Failed to init network\r\n");
 		ret = -1;
-		strcpy(errmsg, "Network initialization failed.");
+		strcpy(errmsg, "网络初始化失败.");
 		goto end;
 	}
 	gprintf("Network Initialized\r\n");
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Network Initialized");
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "网络初始化完成");
 	UpdateScreen();
 	ssl_init(); //only once needed
 	line++;
 	if (download_number == DOWNLOAD_MYSTERIO) {
 		ret = LatestVersion(&major, &minor, &line);
 		if (!ret) {
-			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Download Cancelled");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "下载取消了");
 			UpdateScreen();
 			if (outbuf != NULL) free(outbuf);
 			net_deinit();
@@ -219,11 +219,11 @@ static s32 Download(DOWNLOADS download_number)  {
 			return 0;
 		}
 
-		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Downloading Nintendont v%i.%i", major, minor);
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "下载Nintendont主程序 v%i.%i", major, minor);
 		UpdateScreen();
 		line++;
 	}
-	
+
 	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Downloading...");
 	UpdateScreen();
 	line++;
@@ -236,19 +236,19 @@ static s32 Download(DOWNLOADS download_number)  {
 			gprintf("Error making http request\r\n");
 			ret = -2;
 			http_get_result(&http_status, NULL, NULL);
-			snprintf(errmsg, sizeof(errmsg), "HTTP request failed: %u", http_status);
+			snprintf(errmsg, sizeof(errmsg), "HTTP请求失败: %u", http_status);
 			goto end;
 		}
 	}
 
-	ret = http_get_result(&http_status, &outbuf, &filesize); 
+	ret = http_get_result(&http_status, &outbuf, &filesize);
 	if (((int)*outbuf & 0xF0000000) == 0xF0000000) {
 		ret = -3;
 		snprintf(errmsg, sizeof(errmsg), "http_get_result() failed: %u", http_status);
 		goto end;
 	}
 
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Download Complete");
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "下载完成");
 	UpdateScreen();
 	line++;
 	if (!dir_argument_exists) {
@@ -263,7 +263,7 @@ static s32 Download(DOWNLOADS download_number)  {
 		// active drive, since the kernel uses it.
 		ret = UnzipFile("/controllers", false, DOWNLOAD_CONTROLLERS, outbuf, filesize);
 		if (ret != 1) {
-			strcpy(errmsg, "Unzipping controllers.zip failed.");
+			strcpy(errmsg, "解压缩controllers.zip失败.");
 		}
 	}
 	else if (download_number == DOWNLOAD_GAMECUBE_MD5) {
@@ -280,7 +280,7 @@ static s32 Download(DOWNLOADS download_number)  {
 		free(dirNoSlash);
 
 		if (ret != 1) {
-			strcpy(errmsg, "Unzipping gcn_md5.zip failed.");
+			strcpy(errmsg, "解压缩gcn_md5.zip失败.");
 		}
 	}
 	else
@@ -289,7 +289,7 @@ static s32 Download(DOWNLOADS download_number)  {
 		FRESULT res = f_open_char(&file, filepath, FA_WRITE|FA_CREATE_ALWAYS);
 		if (res != FR_OK) {
 			gprintf("File Error\r\n");
-			snprintf(errmsg, sizeof(errmsg), "Error opening '%s': %u", filepath, res);
+			snprintf(errmsg, sizeof(errmsg), "打开错误 '%s': %u", filepath, res);
 			ret = -4;
 			goto end;
 		} else {
@@ -305,16 +305,16 @@ static s32 Download(DOWNLOADS download_number)  {
 		}
 	}
 	if (ret == 1) {
-		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Update Complete");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "更新完成");
 		UpdateScreen();
 		line++;
 	}
 
 end:
 	if (ret != 1) {
-		PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*line, "Update Error: %s", errmsg);
+		PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*line, "更新错误: %s", errmsg);
 	} else {
-		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "Restart Nintendont to complete update");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*line, "重新启动Nintendont来完成更新");
 	}
 	UpdateScreen();
 	if (outbuf != NULL) free(outbuf);
@@ -331,17 +331,17 @@ void UpdateNintendont(void) {
 	while (true) {
 		if (redraw) {
 			PrintInfo();
-            PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*3, "Update Menu");
-			PrintButtonActions("Go Back", "Select", NULL, NULL);
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*3, "Update Menu");
+			PrintButtonActions("返 回", "更 新", NULL, NULL);
 
 			// Update menu.
-			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*5, "Update MMMod");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*5, "下载Nintendont主程序");
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*6, "Download MasterMod (discontinued)");
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*7, "Download official Nintendont");
-			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*8, "Download titles.txt");
-			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*9, "Download controllers.zip");
-			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*10, "Download gcn_md5.txt");
-            PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*12, "Theme Menu");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*8, "下载列表文件titles.txt");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*9, "下载手柄文件controllers.zip");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*10, "下载MD5文件gcn_md5.txt");
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 50, MENU_POS_Y + 20*12, "Theme Menu");
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 35, MENU_POS_Y + 20*(5+selected), ARROW_RIGHT);
 			redraw = false;
 
@@ -362,19 +362,18 @@ void UpdateNintendont(void) {
 			} else {
 				ThemeMenu();
 			}
-			
+
 			redraw = true;
 		} else if (FPAD_Start(0)) {
 			break;
 		} else if (FPAD_Down(1)) {
 			delay = ticks_to_millisecs(gettime()) + 150;
 			selected++;
-            if (selected == 6) {
+			if (selected == 6) {
                 selected++;
             } else if (selected > 7) {
                 selected = 0;
             }
-            
 			redraw = true;
 		} else if (FPAD_Up(1)) {
 			delay = ticks_to_millisecs(gettime()) + 150;
@@ -384,7 +383,6 @@ void UpdateNintendont(void) {
             } else if (selected < 0) {
                 selected = 7;
             }
-            
 			redraw = true;
 		}
 	}

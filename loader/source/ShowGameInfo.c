@@ -161,30 +161,30 @@ static void DrawGameInfoScreen(const gameinfo *gi, const MD5VerifyState_t *md5)
 	 * Revision: 00
 	 * Format:   1:1 full dump
 	 */
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*4,  "%s", gi->Path);
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*6,  "Title:    %s", gi->Name);
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*7,  "Game ID:  %.6s", gi->ID);
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*4 + 5,  "%s", gi->Path);
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*6,  "标 题 :         %s", gi->Name);
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*7,  "游戏ID:         %.6s", gi->ID);
 
 	static const char *const BI2regions[4] = {"Japan", "USA", "PAL", "South Korea"};
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*8,  "Region:   %s",
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*8,  "区 域 :         %s",
 		BI2regions[(gi->Flags & GIFLAG_REGION_MASK) >> 3]);
 
 	const u8 discNumber = ((gi->Flags & GIFLAG_DISCNUMBER_MASK) >> 5);
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*9,  "Revision: %02u", gi->Revision);
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*10, "Disc #:   %u", discNumber+1);
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*9,  "版 本 :         %02u", gi->Revision);
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*10, "盘 #  :         %u", discNumber+1);
 
 	static const char *const formats[8] = {
-		"1:1 full dump",
-		"Shrunken via DiscEx or GCToolbox",
-		"Extracted FST",
-		"Compressed ISO (Hermes uLoader format)",
-		"Multi-Game Disc",
-		"Unknown (5)",
-		"Unknown (6)",
-		"Unknown (7)",
+		"1:1 完全容量",
+		"通过DiscEx或GCToolbox压缩过",
+		"提取过的FST",
+		"压缩的ISO (Hermes uLoader 格式)",
+		"合集游戏",
+		"未知 (5)",
+		"未知 (6)",
+		"未知 (7)",
 	};
 	const u8 disc_format = (gi->Flags & GIFLAG_FORMAT_MASK);
-	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*11, "Format:");
+	PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*11, "格 式 :");
 	PrintFormat(DEFAULT_SIZE, cColor ? text_color : DiscFormatColors[disc_format],
 		MENU_POS_X+(10*10), MENU_POS_Y + 20*11, "%s", formats[disc_format]);
 
@@ -198,40 +198,40 @@ static void DrawGameInfoScreen(const gameinfo *gi, const MD5VerifyState_t *md5)
 			if (md5->db_status == MD5_DB_OK) {
 				if (md5->db_entry.id6 && md5->db_entry.revision && md5->db_entry.title) {
 					PrintFormat(DEFAULT_SIZE, DiscFormatColors[2], MENU_POS_X, MENU_POS_Y + 20*14,
-						"*** Verified: %s", md5->db_entry.title);
+						"*** 验证: %s", md5->db_entry.title);
 					PrintFormat(DEFAULT_SIZE, DiscFormatColors[2], MENU_POS_X, MENU_POS_Y + 20*15,
-						"*** Game ID:  %s", md5->db_entry.id6);
+						"*** 游戏ID:  %s", md5->db_entry.id6);
 					PrintFormat(DEFAULT_SIZE, DiscFormatColors[2], MENU_POS_X, MENU_POS_Y + 20*16,
-						"*** Revision: %s", md5->db_entry.revision);
+						"*** 版本: %s", md5->db_entry.revision);
 					if (md5->db_entry.discnum) {
 						PrintFormat(DEFAULT_SIZE, DiscFormatColors[2], MENU_POS_X, MENU_POS_Y + 20*17,
-							"*** Disc #:   %s", md5->db_entry.discnum);
+							"*** 盘 #:   %s", md5->db_entry.discnum);
 					}
 				} else {
 					PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*14,
-						"!!! MD5 not found in database. !!!");
+						"!!! 数据库中不存在MD5验证信息. !!!");
 				}
 			}
 		} else if (md5->running) {
 			// MD5 calculation is in progress.
 			// Show the data read so far.
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13,
-				"MD5: Calculating... (%u of %u MiB processed)",
+				"MD5: 计算中... (处理了 %u 总数 %u MiB)",
 				(unsigned int)(md5->image_read / (1024*1024)),
 				(unsigned int)(md5->image_size / (1024*1024)));
 		} else if (md5->gcm_read_error) {
 			// MD5 has not been calculated due to a read error.
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13, "MD5: ");
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X+(5*10), MENU_POS_Y + 20*13,
-				"Read Error occurred (press A to try again)");
+				"读取错误 (按下A键重试)");
 		} else if (md5->cancelled) {
 			// MD5 calculation was cancelled.
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13,
-				"MD5: Cancelled (press A to recalculate)");
+				"MD5: 取消了 (按下A键重新计算)");
 		} else {
 			// MD5 has not been calculated.
 			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13,
-				"MD5: Not calculated (press A to calculate)");
+				"MD5: 未计算 (按下A键开始计算)");
 		}
 
 		if (md5->db_status != MD5_DB_OK) {
@@ -240,54 +240,54 @@ static void DrawGameInfoScreen(const gameinfo *gi, const MD5VerifyState_t *md5)
 			switch (md5->db_status) {
 				case MD5_DB_NOT_FOUND:
 					// Could not find the MD5 database.
-					errmsg = "gcn_md5.txt not found";
+					errmsg = "未找到gcn_md5.txt";
 					break;
 				case MD5_DB_TOO_BIG:
 					// MD5 database is too big.
-					errmsg = "gcn_md5.txt is larger than 1 MiB";
+					errmsg = "gcn_md5.txt超过了1 MB";
 					break;
 				case MD5_DB_NO_MEM:
 					// Could not allocate memory for the MD5 database.
-					errmsg = "memory allocation failed";
+					errmsg = "内存分配失败";
 					break;
 				case MD5_DB_READ_ERROR:
 				default:
 					// Error reading the MD5 database.
-					errmsg = "Read Error occurred";
+					errmsg = "读取错误";
 					break;
 			}
 
 			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*17,
-				"WARNING: MD5 database error: %s.", errmsg);
+				"警告: MD5数据错误: %s.", errmsg);
 		}
 	} else {
 		// Not a 1:1 disc image.
 		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13,
-			"MD5 verification is disabled for this game because");
+			"无法进行MD5验证");
 		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14,
-			"it is not a 1:1 full dump.");
+			"因为游戏不是1:1完全容量.");
 	}
 
 	// TODO: There's a request to determine the DSP.
 	// Maybe also show banner information? Both of these
 	// require extracting data from the file system.
 
-	static const char PressHome[] = "Press HOME (or START) to return to the game list.";
+	static const char PressHome[] = "按下 HOME (或者 START) 按键返回到游戏列表.";
 	PrintFormat(DEFAULT_SIZE, text_color, STR_CONST_X(PressHome), MENU_POS_Y + 20*19, PressHome);
 
 	// Button actions.
-	const char *const btn_B = (md5->running ? "Cancel MD5" : NULL);
+	const char *const btn_B = (md5->running ? "取消 MD5" : NULL);
 
 	// Print information.
 	PrintInfo();
-	PrintButtonActions("Go Back", NULL, btn_B, NULL);
+	PrintButtonActions("返 回", NULL, btn_B, NULL);
 
 	// "Calculate MD5" should be displayed for all formats,
 	// but grayed out if it isn't supported.
 	// (Also grayed out if the MD5 is being calculated or if
 	// it has been calculated.)
 	const u32 color = ((md5->supported && (!md5->running && !md5->calculated)) ? text_color : DARK_GRAY);
-	PrintFormat(DEFAULT_SIZE, color, MENU_POS_X + 430, MENU_POS_Y + 20*1, "A   : Verify MD5");
+	PrintFormat(DEFAULT_SIZE, color, MENU_POS_X + 430, MENU_POS_Y + 20*1, "A   : 验证 MD5");
 }
 
 /**

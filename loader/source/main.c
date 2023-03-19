@@ -517,7 +517,7 @@ static u32 CheckForMultiGameAndRegion(unsigned int CurDICMD, u32 *ISOShift, u32 
 			PrintButtonActions(NULL, "Select", NULL, NULL);
 			static const int subheader_x = (640 - (40*10)) / 2;
 			PrintFormat(DEFAULT_SIZE, text_color, subheader_x, MENU_POS_Y + 20*3,
-				    "Select a game from this multi-game disc:");
+				    "从合集中选取一个游戏:");
 			for (i = 0; i < gamecount; ++i)
 			{
 				const u32 color = gameIsUnaligned[i] ? MAROON : text_color;
@@ -614,8 +614,8 @@ int main(int argc, char **argv)
 	if(!isWiiVC)
 	{
 		// Preparing IOS58 Kernel...
-//		if(argsboot == false)
-//			ShowMessageScreen("Preparing IOS58 Kernel...");
+		//if(argsboot == false)
+			//ShowMessageScreen("正在准备 IOS58 核心...");
 
 		u32 u;
 		//Disables MEMPROT for patches
@@ -638,7 +638,7 @@ int main(int argc, char **argv)
 			// NOTE: Attempting to initialize controllers here causes a crash.
 			// Hence, we can't wait for the user to press the HOME button, so
 			// we'll just wait for a timeout instead.
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*20, "Returning to loader in 10 seconds.");
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*20, "10秒内将返回到loader.");
 			UpdateScreen();
 			VIDEO_WaitVSync();
 
@@ -657,8 +657,8 @@ int main(int argc, char **argv)
 		DCFlushRange( (void*)0x939F0348, sizeof(ESBootPatch) );
 
 		// Loading IOS58 Kernel...
-//		if(argsboot == false)
-//			ShowMessageScreen("Loading IOS58 Kernel...");
+		//if(argsboot == false)
+			//ShowMessageScreen("正在加载 IOS58 核心...");
 
 		//libogc still has that, lets close it
 		__ES_Close();
@@ -680,8 +680,8 @@ int main(int argc, char **argv)
 	//}
 
 	// Preparing Nintendont Kernel...
-//	if(argsboot == false)
-//		ShowMessageScreen("Preparing Nintendont Kernel...");
+	//if(argsboot == false)
+		//ShowMessageScreen("正在准备 Nintendont 核心...");
 
 	//inject nintendont thread
 	void *kernel_bin = NULL;
@@ -695,8 +695,8 @@ int main(int argc, char **argv)
 	memcpy((void*)0x92FFFE00,kernelboot_bin,kernelboot_bin_size);
 	DCFlushRange((void*)0x92FFFE00,kernelboot_bin_size);
 	//Loading Nintendont Kernel...
-//	if(argsboot == false)
-//		ShowMessageScreen("Loading Nintendont Kernel...");
+	//if(argsboot == false)
+		//ShowMessageScreen("正在加载 Nintendont 核心...");
 	//close in case this is wii vc
 	__ES_Close();
 	memset( STATUS, 0, 0x20 );
@@ -714,8 +714,8 @@ int main(int argc, char **argv)
 	fd = IOS_Open( dev_es, 0 );
 	IOS_IoctlvAsync(fd, 0x1F, 0, 0, IOCTL_Buf, NULL, NULL);
 	//Waiting for Nintendont...
-//	if(argsboot == false)
-//		ShowMessageScreen("Waiting for Nintendont...");
+	//if(argsboot == false)
+		//ShowMessageScreen("Nintendont正在进行相关处理...");
 	while(1)
 	{
 		DCInvalidateRange( STATUS, 0x20 );
@@ -732,8 +732,8 @@ int main(int argc, char **argv)
 	KernelLoaded = 1;
 
 	// Checking for storage devices...
-//	if(argsboot == false)
-//		ShowMessageScreen("Checking storage devices...");
+	//if(argsboot == false)
+		//ShowMessageScreen("正在检查存储器设备...");
 
 	// Initialize devices.
 	// TODO: Only mount the device Nintendont was launched from
@@ -761,8 +761,8 @@ int main(int argc, char **argv)
 	if (!devices[DEV_SD] && !devices[DEV_USB])
 	{
 		ClearScreen();
-		gprintf("No FAT device found!\n");
-		PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, 232, "No FAT device found!");
+		gprintf("未找到FAT格式的磁盘!\n");
+		PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, 232, "未找到FAT格式的磁盘!");
 		ExitToLoader(1);
 	}
 	// Seems like some programs start without any args
@@ -789,7 +789,7 @@ int main(int argc, char **argv)
 
 	// Update meta.xml.
 	updateMetaXml();
-	
+
 	CustomBackground();
     int loaderMode = -1;
 
@@ -815,13 +815,13 @@ int main(int argc, char **argv)
 		while((ncfg->Config & NIN_CFG_AUTO_BOOT) && i < 1000000) // wait for wiimote re-synch
 		{
 			if (i == 0) {
-                loaderMode = checkTheme();
-                if (loaderMode == 0) {
-                    PrintInfo();
-                    PrintFormat(DEFAULT_SIZE, text_color, 320 - 90, MENU_POS_Y + 20*10, "B: Cancel Autoboot");
-                    GRRLIB_Render();
-                    ClearScreen();
-                }
+					loaderMode = checkTheme();
+                	if (loaderMode == 0) {
+					PrintInfo();
+					PrintFormat(DEFAULT_SIZE, text_color, 320 - 90, MENU_POS_Y + 20*10, "B: 取消自动启动");
+					GRRLIB_Render();
+					ClearScreen();
+				}
 			}
 			
 			FPAD_Update();
@@ -838,12 +838,12 @@ int main(int argc, char **argv)
 			i++;
 		}
 	}
-	
+
 	if (!(ncfg->Config & NIN_CFG_AUTO_BOOT)){
 		FadeIn(background);
 		ClearScreen();
 	}
-	
+
 	ReconfigVideo(rmode);
 	UseSD = (ncfg->Config & NIN_CFG_USB) == 0;
 
@@ -864,10 +864,10 @@ int main(int argc, char **argv)
 	{
 		// Autobooting.
 		gprintf("Autobooting:\"%s\"\r\n", ncfg->GamePath );
-        //this aparently can break some vc autoboot issues
-        //PrintInfo();
+		//this aparently can break some vc autoboot issues
+		//PrintInfo();
 		GRRLIB_Render(); // This prevents that noise is shown on autoboot before the loading bar.
-        //ClearScreen();
+		//ClearScreen();
 	}
 
 //Init DI and set correct ID if needed
@@ -879,18 +879,18 @@ int main(int argc, char **argv)
 		if(isWiiVC)
 		{
 			if(WDVD_Init() != 0)
-				ShowMessageScreenAndExit("The Wii VC Disc could not be initialized!", 1);
+				ShowMessageScreenAndExit("Wii VC 磁盘无法初始化!", 1);
 			if(WDVD_OpenDataPartition() != 0)
-				ShowMessageScreenAndExit("Found no Partition on Wii VC Disc!", 1);
+				ShowMessageScreenAndExit("Wii VC 磁盘中没有发现分区信息!", 1);
 			if(!WDVD_FST_Mount())
-				ShowMessageScreenAndExit("Unable to open Partition on Wii VC Disc!", 1);
+				ShowMessageScreenAndExit("Wii VC 磁盘中无法读取分区信息!", 1);
 			if(WDVD_FST_OpenDisc(0) != 0)
-				ShowMessageScreenAndExit("No game.iso on Wii VC Disc!", 1);
+				ShowMessageScreenAndExit("Wii VC 磁盘中没有找到game.iso!", 1);
 			u8 *DIBuf = memalign(32,0x800);
 			if(WDVD_FST_Read(DIBuf, 0x800) != 0x800)
 			{
 				free(DIBuf);
-				ShowMessageScreenAndExit("Cant read game.iso start!", 1);
+				ShowMessageScreenAndExit("无法读取game.iso的开始信息!", 1);
 			}
 			if( IsGCGame(DIBuf) == false )
 			{
@@ -899,7 +899,7 @@ int main(int argc, char **argv)
 				if( IsGCGame(DIBuf) == false )
 				{
 					free(DIBuf);
-					ShowMessageScreenAndExit("game.iso is not a GC Disc!", 1);
+					ShowMessageScreenAndExit("game.iso不是一个GC游戏!", 1);
 				}
 			}
 			memcpy(&(ncfg->GameID), DIBuf, 4);
@@ -916,7 +916,7 @@ int main(int argc, char **argv)
 				usleep(20000);
 			if(!(DI_GetStatus() & DVD_READY))
 			{
-				ShowMessageScreenAndExit("The Disc Drive could not be initialized!", 1);
+				ShowMessageScreenAndExit("光驱无法进行初始化!", 1);
 			}
 			DI_Close();
 
@@ -934,7 +934,7 @@ int main(int argc, char **argv)
 				if( IsGCGame(DIBuf) == false )
 				{
 					free(DIBuf);
-					ShowMessageScreenAndExit("The Disc in the Drive is not a GC Disc!", 1);
+					ShowMessageScreenAndExit("光驱中放入的不是GC游戏盘!", 1);
 				}
 			}
 			memcpy(&(ncfg->GameID), DIBuf, 4);
@@ -988,26 +988,26 @@ int main(int argc, char **argv)
 	if (ret != 0) {
 		ClearScreen();
 		PrintInfo();
-		PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*4, "CheckForMultiGameAndRegion() failed: %d", ret);
+		PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*4, "检查合集游戏区域时错误: %d", ret);
 		switch (ret) {
 			case 1:
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "Unable to open the %s.",
-					CurDICMD == 0 ? "disc image file" : "disc drive");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "无法打开 %s.",
+					CurDICMD == 0 ? "游戏文件" : "光驱");
 				break;
 			case 2:
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "Unable to read the disc header.");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "无法读取游戏头信息.");
 				break;
 			case 3:
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "Unable to read the CISO bi2.bin area.");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "无法读取CISO bi2.bin区域.");
 				break;
 			case 4:
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "Unable to open the extracted FST bi2.bin file.");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "无法读取FST中的bi2.bin文件.");
 				break;
 			case 5:
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "Unable to read the extracted FST bi2.bin file.");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "无法读取FST中的bi2.bin文件.");
 				break;
 			default:
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "Unknown error code.");
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "未知的错误代码.");
 				break;
 		}
 
@@ -1016,22 +1016,22 @@ int main(int argc, char **argv)
 			const char *device;
 			switch (CurDICMD) {
 				case DIP_CMD_NORMAL:
-					device = "GameCube disc";
+					device = "GC游戏";
 					break;
 				case DIP_CMD_DVDR:
 					device = "DVD-R";
 					break;
 				default:
-					snprintf(unkdev, sizeof(unkdev), "Unknown (CMD: 0x%02x)", CurDICMD);
+					snprintf(unkdev, sizeof(unkdev), "未知 (CMD: 0x%02x)", CurDICMD);
 					device = unkdev;
 					break;
 			}
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "Device: %s", device);
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "设备: %s", device);
 		} else {
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "Filename: %s:%s", GetRootDevice(), ncfg->GamePath);
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "文件名: %s:%s", GetRootDevice(), ncfg->GamePath);
 		}
 
-		PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*20, "Returning to loader in 10 seconds.");
+		PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*20, "10秒内将返回到loader.");
 		UpdateScreen();
 		VIDEO_WaitVSync();
 
@@ -1123,7 +1123,7 @@ int main(int argc, char **argv)
 			if(GenerateMemCard(MemCard, BI2region) == false)
 			{
 				ClearScreen();
-				ShowMessageScreenAndExit("Failed to create Memory Card File!", 1);
+				ShowMessageScreenAndExit("生成记忆卡文件时发生错误!", 1);
 			}
 		}
 		else
@@ -1142,7 +1142,7 @@ int main(int argc, char **argv)
 		__SYS_UnlockSram(1); // 1 -> write changes
 		while(!__SYS_SyncSram());
 	}
-	
+
 	//Check if game is Triforce game
 	u32 IsTRIGame = 0;
 	if (ncfg->GameID != 0x47545050) //Damn you Knights Of The Temple!
@@ -1227,7 +1227,7 @@ int main(int argc, char **argv)
 	if (loaderMode == -1) //-1 means that not checked until now
         loaderMode = checkTheme();
     loaderTheme(ncfg->Config & NIN_CFG_AUTO_BOOT, loaderMode);
-	
+
 	//sync changes
 	CloseDevices();
 
@@ -1277,7 +1277,7 @@ int main(int argc, char **argv)
 		if(loaderMode == 0){
 			PrintInfo();
 
-			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*6, "Loading patched kernel... %d", STATUS_LOADING);
+			PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*6, "加载打过补丁的内核... %d", STATUS_LOADING);
 			if(STATUS_LOADING == 0)
 			{
 				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*7, "ES_Init...");
@@ -1285,19 +1285,19 @@ int main(int argc, char **argv)
 				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X + 163, MENU_POS_Y + 20*6, " ");
 			}
 			if((STATUS_LOADING > 0 || abs(STATUS_LOADING) > 1) && STATUS_LOADING < 20)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*7, "ES_Init... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*7, "ES_Init... 完成!");
 			if(STATUS_LOADING == 2)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*8, "初始化存储设备...");
 			if(abs(STATUS_LOADING) > 2 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*8, "初始化存储设备... 完成!");
 			if(STATUS_LOADING == -2)
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*8, "Initing storage devices... Error! %d  Shutting down", STATUS_ERROR);
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*8, "初始化存储设备... 错误! %d  关闭中", STATUS_ERROR);
 			if(STATUS_LOADING == 3)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*9, "加载USB/SD设置...");
 			if(abs(STATUS_LOADING) > 3 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*9, "加载USB/SD设置... 完成!");
 			if(STATUS_LOADING == -3)
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*9, "Mounting USB/SD device... Error! %d  Shutting down", STATUS_ERROR);
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*9, "加载USB/SD设置... 错误! %d  关闭中", STATUS_ERROR);
 			if(STATUS_LOADING == 5) {
 	/* 			if (timeout == 0)
 					timeout = ticks_to_secs(gettime()) + 20; // Set timer for 20 seconds
@@ -1309,25 +1309,25 @@ int main(int argc, char **argv)
 					//DCFlushRange( (void*)0x92f00000, 0x100000 );
 					//ExitToLoader(1);
 				}*/
-				PrintFormat(DEFAULT_SIZE, (STATUS_ERROR == -7) ? MAROON:text_color, MENU_POS_X, MENU_POS_Y + 20*10, (STATUS_ERROR == -7) ? "Checking FS... Timeout!" : "Checking FS...");
+				PrintFormat(DEFAULT_SIZE, (STATUS_ERROR == -7) ? MAROON:text_color, MENU_POS_X, MENU_POS_Y + 20*10, (STATUS_ERROR == -7) ? "检查 FS... 超时!" : "检查 FS...");
 			}
 			if(abs(STATUS_LOADING) > 5 && abs(STATUS_LOADING) < 20)
 			{
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*10, "Checking FS... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*10, "检查 FS... 完成!");
 				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*11, "Drive size: %.02f%s Sector size: %d", STATUS_DRIVE, STATUS_GB_MB ? "GB" : "MB", STATUS_SECTOR);
 			}
 			if(STATUS_LOADING == -5)
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "Checking FS... Error! %d Shutting down", STATUS_ERROR);
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*10, "检查 FS... 错误! %d 关闭中", STATUS_ERROR);
 			if(STATUS_LOADING == 6)
 				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules...");
 			if(abs(STATUS_LOADING) > 6 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules... 完成!");
 			if(STATUS_LOADING == -6)
-				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules... Error! %d Shutting down", STATUS_ERROR);
+				PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*12, "ES_LoadModules... 错误! %d 关闭中", STATUS_ERROR);
 			if(STATUS_LOADING == 7)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13, "Loading config...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13, "加载设定信息...");
 			if(abs(STATUS_LOADING) > 7 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13, "Loading config... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*13, "加载设定信息... 完成!");
 			/*if(STATUS_LOADING == 8)
 			{
 				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init HID devices... ");
@@ -1385,13 +1385,13 @@ int main(int argc, char **argv)
 				}
 			}*/
 			if(STATUS_LOADING == 9)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init DI... %40s", " ");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "初始化 DI... %40s", " ");
 			if(abs(STATUS_LOADING) > 9 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "Init DI... Done! %35s", " ");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*14, "初始化 DI... 完成! %35s", " ");
 			if(STATUS_LOADING == 10)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*15, "Init CARD...");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*15, "初始化 CARD...");
 			if(abs(STATUS_LOADING) > 10 && abs(STATUS_LOADING) < 20)
-				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*15, "Init CARD... Done!");
+				PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*15, "初始化 CARD... 完成!");
 			GRRLIB_Screen2Texture(0, 0, screen_buffer, GX_FALSE); // Copy all status messages
 			GRRLIB_Render();
 			ClearScreen();
@@ -1449,7 +1449,7 @@ int main(int argc, char **argv)
 	if(loaderMode == 0)
 	{
 		DrawBuffer(); // Draw all status messages
-		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*17, "Nintendont kernel looping, loading game...");
+		PrintFormat(DEFAULT_SIZE, text_color, MENU_POS_X, MENU_POS_Y + 20*17, "Nintendont内核运行中, 加载游戏中...");
 		GRRLIB_Render();
 		GRRLIB_Screen2Texture(0, 0, screen_buffer, GX_FALSE); // Copy all status messages
 		DrawBuffer(); // Draw all status messages
@@ -1473,7 +1473,7 @@ int main(int argc, char **argv)
 	{
 		Animation();
 	}
-	
+
 	//GRRLIB_FreeTexture(background);
 	GRRLIB_FreeTexture(screen_buffer);
 	GRRLIB_FreeTTF(myFont);
