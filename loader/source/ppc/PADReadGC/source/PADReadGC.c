@@ -108,10 +108,10 @@ u32 PADRead(u32 calledByGame)
 	/* For Wii VC */
 	if(calledByGame && *drcAddress && WiiUGamepadSlot != NIN_CFG_MAXPAD)
 	{
-		// If there is an HIDPad, bump WiiUGamepadSlot to
-		// slot 1 if necessary so the HID pad can be slot 0.
-		if(HIDPad != HID_PAD_NONE && WiiUGamepadSlot == 0)
-			WiiUGamepadSlot = 1;
+		// // If there is an HIDPad, bump WiiUGamepadSlot to
+		// // slot 1 if necessary so the HID pad can be slot 0.
+		// if(HIDPad != HID_PAD_NONE && WiiUGamepadSlot == 0)
+		// 	WiiUGamepadSlot = 1;
 
 		used |= (1<<WiiUGamepadSlot);
 		if(HIDPad == HID_PAD_NOT_SET)
@@ -436,6 +436,7 @@ u32 PADRead(u32 calledByGame)
 				}
 			}
 		}
+		//wei134102 add start
 		if (HID_CTRL->MultiIn == 4)		// multiple controllers, connected to one usb port via a splitter, merged into a single HID_Packet
 		{
 			if (chan == HID_CTRL->MultiInValue) break; // MultiInValue defines how many controllers we are expecting
@@ -450,7 +451,7 @@ u32 PADRead(u32 calledByGame)
 			}			
 		}
 
-//
+//  wei134102 add end
 		if(calledByGame && HID_CTRL->Power.Mask &&	//exit if power configured and all power buttons pressed
 		((HID_Packet[HID_CTRL->Power.Offset] & HID_CTRL->Power.Mask) == HID_CTRL->Power.Mask))
 		{
