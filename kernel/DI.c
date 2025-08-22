@@ -591,12 +591,12 @@ void DIUpdateRegisters( void )
 					memcpy( NetworkCMDBuffer + roffset, (void*)Buffer, Length );
 				}
 				// Max GC disc offset
-				if( Offset >= 0x57058000 )
-				{
-					dbgprintf("Unhandled Media Board Write\n");
-					dbgprintf("GCAM:Write( 0x%08x, 0x%08x, 0x%08x )\n", Offset, Length, Buffer|0x80000000 );
-					Shutdown();
-				}
+				// if( Offset >= 0x57058000 )
+				// {
+				// 	dbgprintf("Unhandled Media Board Write\n");
+				// 	dbgprintf("GCAM:Write( 0x%08x, 0x%08x, 0x%08x )\n", Offset, Length, Buffer|0x80000000 );
+				// 	Shutdown();
+				// }
 				DIOK = 2;
 			} break;
 			case 0xAB:
@@ -759,12 +759,12 @@ void DIUpdateRegisters( void )
 				else
 				{
 					// Max GC disc offset
-					if( Offset >= 0x57058000 )
-					{
-						dbgprintf("Unhandled Read\n");
-						dbgprintf("DIP:DVDRead%02X( 0x%08x, 0x%08x, 0x%08x )\n", DIcommand, Offset, Length, rawAddr );
-						Shutdown();
-					}
+					// if( Offset >= 0x57058000 )
+					// {
+					// 	dbgprintf("Unhandled Read\n");
+					// 	dbgprintf("DIP:DVDRead%02X( 0x%08x, 0x%08x, 0x%08x )\n", DIcommand, Offset, Length, rawAddr );
+					// 	Shutdown();
+					// }
 					if( Buffer < 0x01800000 || // Valid GC Buffer
 						rawAddr == 0x931C1800 ) //PSO Ep.III Hack
 					{

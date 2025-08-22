@@ -179,7 +179,7 @@ static void DrawGameInfoScreen(const gameinfo *gi, const MD5VerifyState_t *md5)
 		"提取过的FST",
 		"压缩的ISO (Hermes uLoader 格式)",
 		"合集游戏",
-		"未知 (5)",
+		"超过容量",
 		"未知 (6)",
 		"未知 (7)",
 	};
