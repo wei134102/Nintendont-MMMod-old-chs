@@ -45,6 +45,7 @@
 	.extern DHCP_get_gateway
 	.extern DHCP_get_dns
 	.extern DHCP_release
+	.extern SOConnect
 
 	.globl __start
 __start:
@@ -95,7 +96,8 @@ __start:
 	b DHCP_get_gateway
 	b DHCP_get_dns
 	b DHCP_release
-
+	b SOConnect
+	
 # just some helper functions
 	.globl disableIRQs
 disableIRQs:
