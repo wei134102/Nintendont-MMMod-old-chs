@@ -2168,7 +2168,7 @@ void PrintLoadKernelError(LoadKernelError_t iosErr, int err)
 			break;
 
 		case LKERR_IOS_Read_IOS58_kernel:
-			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "IOS_Open(IOS58核心) 返回了 %d.", err);
+			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*5, "IOS_Read(IOS58核心) 返回了 %d.", err);
 			PrintFormat(DEFAULT_SIZE, MAROON, MENU_POS_X, MENU_POS_Y + 20*7, "警告: IOS58可能坏掉了.");
 			break;
 	}
