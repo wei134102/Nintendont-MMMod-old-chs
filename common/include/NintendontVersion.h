@@ -12,7 +12,7 @@
 
 // "Special" version.
 // This should only be set in custom builds, i.e. not mainline.
-#define NIN_SPECIAL_VERSION			"b站86年复古游戏厅自用版本"
+#define NIN_SPECIAL_VERSION			"b站86年复古游戏厅专用版"
 //#define NIN_SPECIAL_VERSION			"-BBABeta13"
 
 #endif
