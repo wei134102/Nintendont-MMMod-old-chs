@@ -1,1 +1,44 @@
+name: Build Nintendont
 
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    
+    - name: Set up dependencies
+      run: |
+        # 创建工具链目录
+        mkdir -p $HOME/devkitPro
+        
+        # 下载并解压特定版本的devkitARM
+        wget https://www.mediafire.com/file/j0juqb5vvd6z5/devkitPro_archives/devkitARM_r53-1-x86_64-linux.tar.bz2 -O devkitARM.tar.bz2
+        tar -xjf devkitARM.tar.bz2 -C $HOME/devkitPro
+        
+        # 下载并解压特定版本的devkitPPC
+        wget https://www.mediafire.com/file/j0juqb5vvd6z5/devkitPro_archives/devkitPPC_r35-2-x86_64-linux.tar.bz2 -O devkitPPC.tar.bz2
+        tar -xjf devkitPPC.tar.bz2 -C $HOME/devkitPro
+        
+        # 下载并解压特定版本的libOGC
+        wget https://www.mediafire.com/file/j0juqb5vvd6z5/devkitPro_archives/libogc-1.8.23-1.tar.bz2 -O libogc.tar.bz2
+        tar -xjf libogc.tar.bz2 -C $HOME/devkitPro
+        
+        # 设置环境变量
+        echo "DEVKITPRO=$HOME/devkitPro" >> $GITHUB_ENV
+        echo "DEVKITARM=$HOME/devkitPro/devkitARM" >> $GITHUB_ENV
+        echo "DEVKITPPC=$HOME/devkitPro/devkitPPC" >> $GITHUB_ENV
+    
+    - name: Build Nintendont
+      run: |
+        make forced
+    
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: loader.dol
+        path: loader/loader.dol
