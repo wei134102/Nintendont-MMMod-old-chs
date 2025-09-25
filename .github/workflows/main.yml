@@ -27,7 +27,10 @@ jobs:
         # 下载并解压特定版本的libOGC
         wget https://wii.leseratte10.de/devkitPro/libogc/libogc_1.8.23%20%282019-10-02%29/libogc-1.8.23-1-any.pkg.tar.xz -O libogc.tar.xz
         tar -xJf libogc.tar.xz -C $HOME/devkitPro
-        
+        #下载并解压特定版本的WII RULES
+        wget https://wii.leseratte10.de/devkitPro/devkitPPC/devkitppc-rules/devkitppc-rules-1.1.1-1-any.pkg.tar.xz -O devkitppc-rules.tar.xz
+        tar -xJf devkitppc-rules.tar.xz -C $HOME/devkitPro
+
         # 设置环境变量
         echo "DEVKITPRO=$HOME/devkitPro" >> $GITHUB_ENV
         echo "DEVKITARM=$HOME/devkitPro/devkitARM" >> $GITHUB_ENV
