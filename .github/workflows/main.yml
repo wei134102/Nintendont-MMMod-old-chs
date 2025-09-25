@@ -17,15 +17,15 @@ jobs:
         mkdir -p $HOME/devkitPro
         
         # 下载并解压特定版本的devkitARM
-        wget https://www.mediafire.com/file/j0juqb5vvd6z5/devkitPro_archives/devkitARM_r53-1-x86_64-linux.tar.bz2 -O devkitARM.tar.bz2
+        wget https://wii.leseratte10.de/devkitPro/devkitARM/r53%20%282019-06%29/devkitARM-r53-1-linux.pkg.tar.xz -O devkitARM.tar.bz2
         tar -xjf devkitARM.tar.bz2 -C $HOME/devkitPro
         
         # 下载并解压特定版本的devkitPPC
-        wget https://www.mediafire.com/file/j0juqb5vvd6z5/devkitPro_archives/devkitPPC_r35-2-x86_64-linux.tar.bz2 -O devkitPPC.tar.bz2
+        wget https://wii.leseratte10.de/devkitPro/devkitPPC/r35/devkitPPC_r35-linux.tar.xz -O devkitPPC.tar.bz2
         tar -xjf devkitPPC.tar.bz2 -C $HOME/devkitPro
         
         # 下载并解压特定版本的libOGC
-        wget https://www.mediafire.com/file/j0juqb5vvd6z5/devkitPro_archives/libogc-1.8.23-1.tar.bz2 -O libogc.tar.bz2
+        wget https://wii.leseratte10.de/devkitPro/libogc/libogc_1.8.23%20%282019-10-02%29/libogc-1.8.23-1-any.pkg.tar.xz -O libogc.tar.bz2
         tar -xjf libogc.tar.bz2 -C $HOME/devkitPro
         
         # 设置环境变量
