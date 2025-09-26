@@ -54,15 +54,6 @@ jobs:
         echo "Directory structure of C:\devkitPro after extraction:" 
         Get-ChildItem -Path C:\devkitPro -Recurse | Select-Object FullName | Format-Table -HideTableHeaders
 
-        # Verify devkitppc-rules is present in devkitPPC directory
-        echo "Verifying devkitppc-rules in devkitPPC directory..." 
-        $rulesPath = "C:\devkitPro\devkitPPC\rules"
-        if (Test-Path -Path $rulesPath) { 
-            echo "✓ devkitppc-rules found at $rulesPath" 
-        } else { 
-            echo "Warning: devkitppc-rules not found at $rulesPath!" 
-        }
-
     - name: Set environment variables
       shell: powershell
       run: |
