@@ -148,7 +148,8 @@ jobs:
         
         # Verify make is in PATH
         echo "Checking for make in PATH..."
-        where.exe make || echo "Warning: make not found in PATH!"
+        where.exe make > $null 2>&1
+        if ($LASTEXITCODE -ne 0) { echo "Warning: make not found in PATH!" }
         
         # Execute make command in Windows environment with windows=1 parameter
         echo "Compiling with make command, passing windows=1 parameter..."
@@ -156,7 +157,7 @@ jobs:
           make forced windows=1
           if ($LASTEXITCODE -ne 0) { echo "Warning: make command returned non-zero exit code!"; exit 1 }
         } catch {
-          echo "Error: make command execution failed!"; exit 1
+          echo "Error: make command execution failed! Exception: $($_.Exception.Message)"; exit 1
         }
     
     - name: Verify build output
