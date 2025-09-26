@@ -242,9 +242,9 @@ jobs:
         echo "TMPDIR=$env:TMPDIR" | Out-File -FilePath $env:GITHUB_ENV -Append
         
         # Create an additional directory structure to simulate the path that's failing
-        $模拟失败路径 = Join-Path $tempDir "tmp.$([Guid]::NewGuid().ToString().Substring(0,8))"
-        New-Item -ItemType Directory -Force -Path $模拟失败路径
-        echo "Created simulated failed path structure: $模拟失败路径"
+        $simulatedFailedPath = Join-Path $tempDir "tmp.$([Guid]::NewGuid().ToString().Substring(0,8))"
+        New-Item -ItemType Directory -Force -Path $simulatedFailedPath
+        echo "Created simulated failed path structure: $simulatedFailedPath"
         
         # Add more debugging about the paths being used
         echo "Current environment paths:"
