@@ -96,6 +96,11 @@ jobs:
           # Check if chocolatey is available
           if (-not (Get-Command 'choco' -ErrorAction SilentlyContinue)) {
             echo "Chocolatey not found, installing..."
+            # Check if there's an existing chocolatey folder that might be corrupted
+            if (Test-Path -Path 'C:\ProgramData\chocolatey') {
+              echo "Found existing chocolatey folder that might be corrupted. Renaming it..."
+              Rename-Item -Path 'C:\ProgramData\chocolatey' -NewName 'C:\ProgramData\chocolatey_old' -Force
+            }
             Set-ExecutionPolicy Bypass -Scope Process -Force
             [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
             iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
