@@ -241,6 +241,11 @@ jobs:
         $env:TMPDIR = $tempDir
         echo "TMPDIR=$env:TMPDIR" | Out-File -FilePath $env:GITHUB_ENV -Append
         
+        # Create an additional directory structure to simulate the path that's failing
+        $模拟失败路径 = Join-Path $tempDir "tmp.$([Guid]::NewGuid().ToString().Substring(0,8))"
+        New-Item -ItemType Directory -Force -Path $模拟失败路径
+        echo "Created simulated failed path structure: $模拟失败路径"
+        
         # Add more debugging about the paths being used
         echo "Current environment paths:"
         echo "TEMP=$env:TEMP"
@@ -260,16 +265,19 @@ jobs:
         # Make sure the temporary directory is writable
         echo "Setting permissions on temporary directory"
         icacls $tempDir /grant Everyone:F /T /Q
+        icacls "C:\tmp" /grant Everyone:F /T /Q
         
-        # Create a symlink for /tmp to Windows temp directory if possible
-        # This may require elevated permissions, but we already created the physical directory
+        # Create a junction (directory link) instead of a symlink, which might work better in GitHub Actions
         try {
-          if (!(Test-Path -Path "C:\tmp" -PathType SymbolicLink)) {
-            echo "Creating symlink C:\tmp -> $tempDir"
-            New-Item -ItemType SymbolicLink -Path "C:\tmp" -Target $tempDir -ErrorAction SilentlyContinue
+          if (Test-Path -Path "C:\tmp") {
+            Remove-Item -Path "C:\tmp" -Recurse -Force -ErrorAction SilentlyContinue
           }
+          echo "Creating junction C:\tmp -> $tempDir"
+          cmd /c mklink /J "C:\tmp" "$tempDir"
         } catch {
-          echo "Warning: Could not create symlink for /tmp, but physical directory exists. Build may still work."
+          echo "Warning: Could not create junction for /tmp, creating physical directory instead"
+          New-Item -ItemType Directory -Force -Path "C:\tmp"
+          icacls "C:\tmp" /grant Everyone:F /T /Q
         }
         
         # Additional debug: Show what C:\tmp actually is
@@ -279,19 +287,42 @@ jobs:
           if ($tmpDirInfo.LinkType) {
             echo "C:\tmp symlink target: $($tmpDirInfo.Target)"
           }
-          echo "C:\tmp permissions:"
+          echo "C:\tmp permissions:" 
           icacls "C:\tmp" | Write-Output
+          echo "Contents of C:\tmp:"
+          Get-ChildItem -Path "C:\tmp" | Format-Table -AutoSize
+        }
+        
+        # Try to find out what bin2o is doing by checking the wii_rules file
+        echo "Looking for wii_rules to understand bin2o definition..."
+        $wiiRulesPath = Get-ChildItem -Path $env:DEVKITPPC -Recurse -Filter "wii_rules" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($wiiRulesPath) {
+          echo "Found wii_rules at $($wiiRulesPath.FullName)"
+          echo "Searching for bin2o definition..."
+          Get-Content -Path $wiiRulesPath.FullName -ErrorAction SilentlyContinue | Select-String -Pattern "bin2o" -Context 3,3 | Write-Output
         }
         
         # Execute make command in Windows environment with windows=1 parameter and verbose output
         echo "Compiling with make command, passing windows=1 parameter..."
         try {
-          # Use --debug=b to show more information about the build process
-          # Also pass TMPDIR environment variable explicitly
-          make forced windows=1 VERBOSE=1 TMPDIR=$tempDir
-          if ($LASTEXITCODE -ne 0) { echo "Warning: make command returned non-zero exit code!"; exit 1 }
+          # Use SHELL=cmd.exe to force Windows-style path handling in make
+          # Also pass TMPDIR and TEMP environment variables explicitly
+          $env:SHELL = "cmd.exe"
+          make forced windows=1 VERBOSE=1 TMPDIR=$tempDir TEMP=$tempDir
+          if ($LASTEXITCODE -ne 0) {
+            echo "Warning: make command returned non-zero exit code!"
+            # Additional debugging after failure
+            echo "Debug information after failure:"
+            echo "Contents of C:\tmp after build attempt:"
+            Get-ChildItem -Path "C:\tmp" -Recurse -ErrorAction SilentlyContinue | Format-Table -AutoSize
+            exit 1
+          }
         } catch {
-          echo "Error: make command execution failed! Exception: $($_.Exception.Message)"; exit 1
+          echo "Error: make command execution failed! Exception: $($_.Exception.Message)"
+          # Additional debugging after exception
+          echo "Contents of C:\tmp after exception:"
+          Get-ChildItem -Path "C:\tmp" -Recurse -ErrorAction SilentlyContinue | Format-Table -AutoSize
+          exit 1
         } finally {
           # Clean up temporary directory
           echo "Cleaning up temporary directory: $tempDir"
