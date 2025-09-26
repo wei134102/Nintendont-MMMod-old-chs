@@ -87,6 +87,32 @@ jobs:
           Get-ChildItem -Path C:\devkitPro\devkitPPC\bin | Select-Object Name | Format-Table -HideTableHeaders
         }
 
+    - name: Install make tool
+      shell: powershell
+      run: |
+        # Download and install make tool
+        echo "Downloading make tool..."
+        $makeZipUrl = "https://github.com/TraeZ/make-windows/releases/download/v4.4.1/make-4.4.1.zip"
+        $makeZipPath = "${{ github.workspace }}\make.zip"
+        $makeDir = "${{ github.workspace }}\make"
+        
+        Invoke-WebRequest -Uri $makeZipUrl -OutFile $makeZipPath
+        Expand-Archive -Path $makeZipPath -DestinationPath $makeDir -Force
+        
+        # Add make to PATH
+        $makeExePath = "$makeDir\make.exe"
+        if (Test-Path $makeExePath) {
+          echo "Make tool installed successfully at $makeExePath"
+          $env:PATH = "$makeDir;$env:PATH"
+        } else {
+          echo "Error: Failed to install make tool!" 
+          exit 1
+        }
+        
+        # Verify make installation
+        echo "Verifying make installation..."
+        make --version || echo "Warning: make version check failed!"
+
     - name: Build Nintendont
       shell: powershell
       run: |
@@ -96,6 +122,10 @@ jobs:
         echo "DEVKITARM=$env:DEVKITARM"
         echo "DEVKITPPC=$env:DEVKITPPC"
         echo "PATH=$env:PATH"
+        
+        # Verify make is in PATH
+        echo "Checking for make in PATH..."
+        where.exe make || echo "Warning: make not found in PATH!"
         
         # Execute make command in Windows environment with windows=1 parameter
         echo "Compiling with make command, passing windows=1 parameter..."
