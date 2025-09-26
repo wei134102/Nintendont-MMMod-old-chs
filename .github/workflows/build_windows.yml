@@ -54,6 +54,27 @@ jobs:
         echo "Directory structure of C:\devkitPro after extraction:" 
         Get-ChildItem -Path C:\devkitPro -Recurse | Select-Object FullName | Format-Table -HideTableHeaders
 
+    - name: Check devkitPPC structure and tools
+      shell: powershell
+      run: |
+        # Check for wii_rules file
+        echo "Looking for wii_rules file in C:\devkitPro..."
+        Get-ChildItem -Path C:\devkitPro -Recurse -Filter "wii_rules" | Select-Object FullName | Format-Table -HideTableHeaders
+        
+        # Check devkitPPC bin directory for powerpc-eabi-gcc
+        echo "Contents of C:\devkitPro\devkitPPC\bin directory:" 
+        if (Test-Path -Path 'C:\devkitPro\devkitPPC\bin') {
+          Get-ChildItem -Path 'C:\devkitPro\devkitPPC\bin' | Select-Object Name | Format-Table -HideTableHeaders
+          # Check specifically for powerpc-eabi-gcc
+          if (Test-Path -Path 'C:\devkitPro\devkitPPC\bin\powerpc-eabi-gcc.exe') {
+            echo "Found powerpc-eabi-gcc.exe in C:\devkitPro\devkitPPC\bin"
+          } else {
+            echo "Warning: powerpc-eabi-gcc.exe not found in C:\devkitPro\devkitPPC\bin"
+          }
+        } else {
+          echo "Error: C:\devkitPro\devkitPPC\bin directory not found!"
+        }
+
     - name: Set environment variables
       shell: powershell
       run: |
@@ -171,10 +192,49 @@ jobs:
           echo "Warning: make not found in PATH!"
         }
         
-        # Execute make command in Windows environment with windows=1 parameter
+        # Additional debugging for devkitPPC and compiler
+        echo "Debugging devkitPPC configuration..."
+        # Check if wii_rules exists
+        if (Test-Path -Path "$env:DEVKITPPC\wii_rules") {
+          echo "Found wii_rules at $env:DEVKITPPC\wii_rules"
+          # Show first few lines of wii_rules to understand CC variable definition
+          Get-Content -Path "$env:DEVKITPPC\wii_rules" -TotalCount 20
+        } else {
+          echo "Error: wii_rules not found at $env:DEVKITPPC\wii_rules"
+          # Search for wii_rules in devkitPPC directory
+          $wiiRulesPath = Get-ChildItem -Path $env:DEVKITPPC -Recurse -Filter "wii_rules" | Select-Object -First 1
+          if ($wiiRulesPath) {
+            echo "Found wii_rules at $($wiiRulesPath.FullName)"
+            # Update DEVKITPPC environment variable to match
+            echo "Updating DEVKITPPC to $($wiiRulesPath.Directory.FullName)"
+            $env:DEVKITPPC = $wiiRulesPath.Directory.FullName
+            echo "DEVKITPPC=$env:DEVKITPPC" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+        }
+        
+        # Check if devkitPPC bin is in PATH
+        if ($env:PATH -like "*$env:DEVKITPPC\bin*") {
+          echo "devkitPPC\bin is in PATH"
+        } else {
+          echo "Warning: devkitPPC\bin not in PATH! Adding it..."
+          $env:PATH = "$env:DEVKITPPC\bin;$env:PATH"
+          echo "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+        }
+        
+        # Check if powerpc-eabi-gcc is available
+        if (Get-Command 'powerpc-eabi-gcc' -ErrorAction SilentlyContinue) {
+          echo "Found powerpc-eabi-gcc at $(Get-Command 'powerpc-eabi-gcc').Path"
+          powerpc-eabi-gcc --version
+        } else {
+          echo "Error: powerpc-eabi-gcc not found! Searching for it..."
+          Get-ChildItem -Path $env:DEVKITPPC -Recurse -Filter "powerpc-eabi-gcc.exe" | Select-Object FullName | Format-Table -HideTableHeaders
+        }
+        
+        # Execute make command in Windows environment with windows=1 parameter and verbose output
         echo "Compiling with make command, passing windows=1 parameter..."
         try {
-          make forced windows=1
+          # Use --debug=b to show more information about the build process
+          make forced windows=1 VERBOSE=1
           if ($LASTEXITCODE -ne 0) { echo "Warning: make command returned non-zero exit code!"; exit 1 }
         } catch {
           echo "Error: make command execution failed! Exception: $($_.Exception.Message)"; exit 1
