@@ -86,34 +86,7 @@ jobs:
         if (Test-Path -Path C:\devkitPro\devkitPPC\bin) {
           Get-ChildItem -Path C:\devkitPro\devkitPPC\bin | Select-Object Name | Format-Table -HideTableHeaders
         }
-    
-    - name: Install make tool
-      shell: powershell
-      run: |
-        # Install chocolatey package manager
-        echo "Installing chocolatey package manager..."
-        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-        if ($LASTEXITCODE -ne 0) { echo "Error: Failed to install chocolatey!"; exit 1 }
-        
-        # Refresh environment variables
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-        
-        echo "Installing make tool..."
-        choco install make -y --no-progress
-        if ($LASTEXITCODE -ne 0) { echo "Error: Failed to install make!"; exit 1 }
-        
-        # Refresh environment variables
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-        
-        # Verify make installation
-        echo "Verifying make installation..."
-        try {
-          make --version
-        } catch {
-          echo "Error: make command is not available!"
-          exit 1
-        }
-    
+
     - name: Build Nintendont
       shell: powershell
       run: |
