@@ -19,44 +19,6 @@ jobs:
         echo "Contents of tools directory:"
         Get-ChildItem -Path .\tools -Recurse | Select-Object FullName | Format-Table -HideTableHeaders
 
-    - name: Install devkitPro Updater
-      shell: powershell
-      run: |
-        # Download devkitPro Updater
-        echo "Downloading devkitProUpdater-3.0.3.exe..."
-        $updaterUrl = "https://github.com/devkitPro/installer/releases/download/v3.0.3/devkitProUpdater-3.0.3.exe"
-        $updaterPath = "$env:TEMP\devkitProUpdater-3.0.3.exe"
-        Invoke-WebRequest -Uri $updaterUrl -OutFile $updaterPath
-        
-        # Verify download
-        if (!(Test-Path -Path $updaterPath)) { 
-          echo "Error: Failed to download devkitProUpdater!"; 
-          exit 1 
-        }
-        
-        echo "devkitProUpdater downloaded successfully to $updaterPath"
-
-    - name: Run devkitPro Updater (install wii, ngc, nds, gamecube components)
-      shell: powershell
-      run: |
-        $updaterPath = "$env:TEMP\devkitProUpdater-3.0.3.exe"
-        
-        echo "Running devkitProUpdater with silent installation..."
-        # Use silent mode to install the required components
-        # Default installation path is C:\devkitPro
-        # Select components: wii, ngc, nds, gamecube (not switch)
-        Start-Process -FilePath $updaterPath -ArgumentList "/S /Install=wii,ngc,nds,gamecube" -Wait -PassThru
-        
-        # Verify installation
-        if (!(Test-Path -Path "C:\devkitPro")) { 
-          echo "Error: devkitPro installation failed!"; 
-          exit 1 
-        }
-        
-        echo "devkitPro installed successfully to C:\devkitPro"
-        echo "Contents of C:\devkitPro after installation:"
-        Get-ChildItem -Path "C:\devkitPro" | Select-Object Name | Format-Table -HideTableHeaders
-
     - name: Install MinGW-w64
       shell: powershell
       run: |
@@ -87,22 +49,7 @@ jobs:
           echo "Warning: MSYS2 installation may have failed!"
         }
 
-    - name: Backup existing devkitPro installation
-      shell: powershell
-      run: |
-        echo "Backing up existing devkitPro installation..."
-        $backupPath = "C:\devkitPro_backup"
-        if (Test-Path -Path "C:\devkitPro") {
-          if (Test-Path -Path $backupPath) {
-            Remove-Item -Path $backupPath -Recurse -Force
-          }
-          Move-Item -Path "C:\devkitPro" -Destination $backupPath
-          echo "devkitPro backed up to $backupPath"
-        } else {
-          echo "Warning: No existing devkitPro installation found to back up!"
-        }
-
-    - name: Replace devkitPro with tools directory files
+    - name: Set up devkitPro environment from tools directory
       shell: powershell
       run: |
         # Create devkitPro directory
@@ -131,7 +78,7 @@ jobs:
         if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract libogc.7z!"; exit 1 }
         
         # Display directory structure after extraction for debugging
-        echo "Directory structure of C:\devkitPro after extraction:"
+        echo "Directory structure of C:\devkitPro after extraction:" 
         Get-ChildItem -Path C:\devkitPro -Recurse | Select-Object FullName | Format-Table -HideTableHeaders
 
     - name: Set environment variables
