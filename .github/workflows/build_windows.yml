@@ -223,7 +223,7 @@ jobs:
           $env:SHELL = "cmd.exe";
           
           # First try to use MAKE environment variable if set
-          if (Test-Path env:MAKE -and (Test-Path $env:MAKE)) {
+          if ((Test-Path env:MAKE) -and (Test-Path $env:MAKE)) {
             Write-Host "Using make from MAKE environment variable: $env:MAKE";
             & $env:MAKE forced windows=1 VERBOSE=1;
           } 
