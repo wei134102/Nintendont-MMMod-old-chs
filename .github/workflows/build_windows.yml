@@ -114,6 +114,11 @@ jobs:
           if (Get-Command 'make' -ErrorAction SilentlyContinue) {
             $makeVersion = make --version
             echo "Make tool installed successfully. Version: $makeVersion"
+            # Get make path and persist to GITHUB_ENV for future steps
+            $makePath = (Get-Command 'make').Path
+            $makeDir = (Get-Item $makePath).Directory.FullName
+            echo "Make found at: $makePath"
+            echo "PATH=$makeDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
           } else {
             echo "Warning: make command not found in PATH! Trying to locate it..."
             # Look for make in common locations
@@ -125,9 +130,23 @@ jobs:
             foreach ($path in $possiblePaths) {
               if (Test-Path $path) {
                 echo "Found make at $path"
-                $env:PATH = "$((Get-Item $path).Directory.FullName);$env:PATH"
+                $makeDir = (Get-Item $path).Directory.FullName
+                $env:PATH = "$makeDir;$env:PATH"
+                # Persist to GITHUB_ENV for future steps
+                echo "PATH=$makeDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
                 break
               }
+            }
+            
+            # Final verification after path search
+            if (-not (Get-Command 'make' -ErrorAction SilentlyContinue)) {
+              echo "Error: make tool could not be found even after path search!"
+              # List chocolatey installation directory for debugging
+              if (Test-Path -Path 'C:\ProgramData\chocolatey') {
+                echo "Contents of C:\ProgramData\chocolatey\bin directory:"
+                Get-ChildItem -Path 'C:\ProgramData\chocolatey\bin' | Select-Object Name | Format-Table -HideTableHeaders
+              }
+              exit 1
             }
           }
         } catch {
