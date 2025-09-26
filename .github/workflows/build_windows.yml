@@ -241,15 +241,22 @@ jobs:
         $env:TMPDIR = $tempDir
         echo "TMPDIR=$env:TMPDIR" | Out-File -FilePath $env:GITHUB_ENV -Append
         
+        # Create a physical C:\tmp directory if it doesn't exist
+        # This will provide a /tmp path that works in MinGW
+        if (!(Test-Path -Path "C:\tmp")) {
+          echo "Creating physical directory C:\tmp"
+          New-Item -ItemType Directory -Force -Path "C:\tmp"
+        }
+        
         # Create a symlink for /tmp to Windows temp directory if possible
-        # This may require elevated permissions, so we'll try but not fail if it doesn't work
+        # This may require elevated permissions, but we already created the physical directory
         try {
-          if (!(Test-Path -Path "C:\tmp")) {
+          if (!(Test-Path -Path "C:\tmp" -PathType SymbolicLink)) {
             echo "Creating symlink C:\tmp -> $tempDir"
             New-Item -ItemType SymbolicLink -Path "C:\tmp" -Target $tempDir -ErrorAction SilentlyContinue
           }
         } catch {
-          echo "Warning: Could not create symlink for /tmp, but build may still work with TMPDIR set."
+          echo "Warning: Could not create symlink for /tmp, but physical directory exists. Build may still work."
         }
         
         # Execute make command in Windows environment with windows=1 parameter and verbose output
@@ -265,6 +272,7 @@ jobs:
           # Clean up temporary directory
           echo "Cleaning up temporary directory: $tempDir"
           Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+          # Leave C:\tmp directory for potential future use
         }
     
     - name: Verify build output
