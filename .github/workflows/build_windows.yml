@@ -39,38 +39,71 @@ jobs:
           echo "Chocolatey is already installed. Version: $(choco --version)";
         }
 
-    - name: Set up build tools (alternative method)
+    - name: Install make tool
       shell: powershell
       run: |
-        # Create a tools directory if it doesn't exist
-        $toolsDir = Join-Path $env:RUNNER_TEMP "build-tools";
-        New-Item -ItemType Directory -Force -Path $toolsDir;
-        
-        # Download and extract make
-        echo "Downloading make...";
-        $makeZipUrl = "https://github.com/gnu-mcu-eclipse/windows-build-tools/releases/download/v2.12.1-20200515-10-g57bdbb9/gnu-mcu-eclipse-windows-build-tools-2.12.1-20200515-10-g57bdbb9-win64.zip";
-        $makeZipPath = Join-Path $toolsDir "make.zip";
-        $makeExtractPath = Join-Path $toolsDir "make";
-        
+        # Install make tool using chocolatey (available in GitHub Actions Windows runners)
+        echo "Installing make tool using chocolatey..."
         try {
-          Invoke-WebRequest -Uri $makeZipUrl -OutFile $makeZipPath;
-          Expand-Archive -Path $makeZipPath -DestinationPath $makeExtractPath -Force;
-          # Find the bin directory
-          $makeBinDir = Get-ChildItem -Path $makeExtractPath -Recurse -Directory -Filter "bin" | Select-Object -First 1 -ExpandProperty FullName;
-          if ($makeBinDir) {
-            echo "Make found at: $makeBinDir\make.exe";
-            # Add to PATH
-            echo "PATH=$makeBinDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append;
+          # Check if chocolatey is available
+          if (-not (Get-Command 'choco' -ErrorAction SilentlyContinue)) {
+            echo "Chocolatey not found, installing..."
+            # Check if there's an existing chocolatey folder that might be corrupted
+            if (Test-Path -Path 'C:\ProgramData\chocolatey') {
+              echo "Found existing chocolatey folder that might be corrupted. Renaming it..."
+              Rename-Item -Path 'C:\ProgramData\chocolatey' -NewName 'C:\ProgramData\chocolatey_old' -Force
+            }
+            Set-ExecutionPolicy Bypass -Scope Process -Force
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+          }
+          
+          # Install make tool
+          choco install make --yes --no-progress
+          
+          # Verify make installation
+          echo "Verifying make installation..."
+          if (Get-Command 'make' -ErrorAction SilentlyContinue) {
+            $makeVersion = make --version
+            echo "Make tool installed successfully. Version: $makeVersion"
+            # Get make path and persist to GITHUB_ENV for future steps
+            $makePath = (Get-Command 'make').Path
+            $makeDir = (Get-Item $makePath).Directory.FullName
+            echo "Make found at: $makePath"
+            echo "PATH=$makeDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            echo "Warning: make command not found in PATH! Trying to locate it..."
+            # Look for make in common locations
+            $possiblePaths = @(
+              "C:\ProgramData\chocolatey\bin\make.exe",
+              "C:\tools\bin\make.exe"
+            )
+            
+            foreach ($path in $possiblePaths) {
+              if (Test-Path $path) {
+                echo "Found make at $path"
+                $makeDir = (Get-Item $path).Directory.FullName
+                $env:PATH = "$makeDir;$env:PATH"
+                # Persist to GITHUB_ENV for future steps
+                echo "PATH=$makeDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+                break
+              }
+            }
+            
+            # Final verification after path search
+            if (-not (Get-Command 'make' -ErrorAction SilentlyContinue)) {
+              echo "Error: make tool could not be found even after path search!"
+              # List chocolatey installation directory for debugging
+              if (Test-Path -Path 'C:\ProgramData\chocolatey') {
+                echo "Contents of C:\ProgramData\chocolatey\bin directory:"
+                Get-ChildItem -Path 'C:\ProgramData\chocolatey\bin' | Select-Object Name | Format-Table -HideTableHeaders
+              }
+              exit 1
+            }
           }
         } catch {
-          echo "Warning: Failed to download make. Error: $($_.Exception.Message)";
-        }
-        
-        # Verify make is available
-        if (Get-Command 'make' -ErrorAction SilentlyContinue) {
-          echo "Make tool is available. Version: $(make --version | Select-Object -First 1)";
-        } else {
-          echo "Warning: Make tool could not be found. Will use devkitPro tools if available.";
+          echo "Error: Failed to install make tool! Exception: $($_.Exception.Message)"
+          exit 1
         }
 
     - name: Set up devkitPro environment from tools directory
