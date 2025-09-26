@@ -1,0 +1,90 @@
+name: Build Nintendont (Windows)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up dependencies
+      shell: powershell
+      run: |
+        # 创建工具链目录
+        New-Item -ItemType Directory -Force -Path C:\devkitPro
+        
+        # 解压tools目录下的devkitARM.7z到C:\devkitPro
+        echo "正在解压devkitARM.7z..."
+        # 使用7-Zip解压RAR文件，GitHub Actions的Windows环境已预装7-Zip
+        7z x -y .\tools\devkitARM.7z -oC:\devkitPro
+        
+        # 解压tools目录下的devkitPPC.7z到C:\devkitPro
+        echo "正在解压devkitPPC.7z..."
+        7z x -y .\tools\devkitPPC.7z -oC:\devkitPro
+        
+        # 解压tools目录下的libogc.7z到C:\devkitPro
+        echo "正在解压libogc.7z..."
+        7z x -y .\tools\libogc.7z -oC:\devkitPro
+        
+        # 显示解压后的目录结构，用于调试
+        echo "解压后的C:\devkitPro目录结构："
+        Get-ChildItem -Path C:\devkitPro -Recurse | Select-Object FullName | Format-Table -HideTableHeaders
+    
+    - name: Set environment variables
+      shell: powershell
+      run: |
+        # 设置环境变量
+        echo "DEVKITPRO=C:\devkitPro" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "DEVKITARM=C:\devkitPro\devkitARM" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "DEVKITPPC=C:\devkitPro\devkitPPC" | Out-File -FilePath $env:GITHUB_ENV -Append
+        
+        # 添加工具链bin目录到PATH
+        echo "PATH=%PATH%;C:\devkitPro\devkitARM\bin;C:\devkitPro\devkitPPC\bin" | Out-File -FilePath $env:GITHUB_ENV -Append
+        
+        # 验证环境变量设置
+        echo "环境变量设置："
+        echo "DEVKITPRO=$env:DEVKITPRO"
+        echo "DEVKITARM=$env:DEVKITARM"
+        echo "DEVKITPPC=$env:DEVKITPPC"
+        echo "PATH=$env:PATH"
+    
+    - name: Install make tool
+      shell: powershell
+      run: |
+        # 在Windows环境中安装make工具
+        echo "安装chocolatey包管理器..."
+        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+        echo "安装make工具..."
+        choco install make -y
+        
+        # 验证make工具安装
+        make --version
+    
+    - name: Build Nintendont
+      shell: powershell
+      run: |
+        # 在Windows环境中执行make命令，传递windows=1参数
+        echo "使用make命令编译，传递windows=1参数..."
+        make forced windows=1
+    
+    - name: Verify build output
+      shell: powershell
+      run: |
+        # 检查是否生成了loader.dol文件
+        if (Test-Path -Path .\loader\loader.dol) {
+          echo "构建成功，loader.dol文件已生成！"
+          Get-ChildItem -Path .\loader\loader.dol | Select-Object FullName, Length | Format-Table
+        } else {
+          echo "构建失败，未找到loader.dol文件！"
+          exit 1
+        }
+    
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: loader.dol
+        path: loader/loader.dol
