@@ -14,172 +14,190 @@ jobs:
     - name: Debug - Check repository structure
       shell: powershell
       run: |
-        echo "Current directory structure:"
-        Get-ChildItem -Path . -Recurse | Select-Object FullName | Format-Table -HideTableHeaders
-        echo "Contents of tools directory:"
-        Get-ChildItem -Path .\tools -Recurse | Select-Object FullName | Format-Table -HideTableHeaders
+        echo "Current directory structure:";
+        Get-ChildItem -Path . -Recurse | Select-Object FullName | Format-Table -HideTableHeaders;
+        echo "Contents of tools directory:";
+        Get-ChildItem -Path .\tools -Recurse | Select-Object FullName | Format-Table -HideTableHeaders;
 
-    - name: Install MinGW-w64
+    - name: Ensure Chocolatey is installed
       shell: powershell
       run: |
-        echo "Installing MinGW-w64 via chocolatey..."
-        choco install mingw-w64 --yes --no-progress
-        
-        # Verify installation
-        if (Get-Command 'gcc' -ErrorAction SilentlyContinue) {
-          echo "MinGW-w64 installed successfully. Version: $(gcc --version | Select-Object -First 1)"
+        # Check if Chocolatey is already installed
+        if (!(Get-Command 'choco' -ErrorAction SilentlyContinue)) {
+          echo "Chocolatey not found, installing...";
+          # Use the official Chocolatey installation script
+          Set-ExecutionPolicy Bypass -Scope Process -Force;
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
+          Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'));
+          # Verify installation
+          if (Get-Command 'choco' -ErrorAction SilentlyContinue) {
+            echo "Chocolatey installed successfully.";
+          } else {
+            echo "Warning: Chocolatey installation may have failed. Proceeding with alternative methods.";
+          }
         } else {
-          echo "Warning: MinGW-w64 installation may have failed!"
+          echo "Chocolatey is already installed. Version: $(choco --version)";
         }
 
-    - name: Install MSYS2
+    - name: Set up build tools (alternative method)
       shell: powershell
       run: |
-        echo "Installing MSYS2 via chocolatey..."
-        choco install msys2 --yes --no-progress
+        # Create a tools directory if it doesn't exist
+        $toolsDir = Join-Path $env:RUNNER_TEMP "build-tools";
+        New-Item -ItemType Directory -Force -Path $toolsDir;
         
-        # Verify installation
-        $msys2Path = "C:\tools\msys64\msys2_shell.cmd"
-        if (Test-Path -Path $msys2Path) {
-          echo "MSYS2 installed successfully to C:\tools\msys64"
-          # Add MSYS2 to PATH
-          echo "Adding MSYS2 to PATH..."
-          echo "PATH=C:\tools\msys64\usr\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+        # Download and extract make
+        echo "Downloading make...";
+        $makeZipUrl = "https://github.com/gnu-mcu-eclipse/windows-build-tools/releases/download/v2.12.1-20200515-10-g57bdbb9/gnu-mcu-eclipse-windows-build-tools-2.12.1-20200515-10-g57bdbb9-win64.zip";
+        $makeZipPath = Join-Path $toolsDir "make.zip";
+        $makeExtractPath = Join-Path $toolsDir "make";
+        
+        try {
+          Invoke-WebRequest -Uri $makeZipUrl -OutFile $makeZipPath;
+          Expand-Archive -Path $makeZipPath -DestinationPath $makeExtractPath -Force;
+          # Find the bin directory
+          $makeBinDir = Get-ChildItem -Path $makeExtractPath -Recurse -Directory -Filter "bin" | Select-Object -First 1 -ExpandProperty FullName;
+          if ($makeBinDir) {
+            echo "Make found at: $makeBinDir\make.exe";
+            # Add to PATH
+            echo "PATH=$makeBinDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append;
+          }
+        } catch {
+          echo "Warning: Failed to download make. Error: $($_.Exception.Message)";
+        }
+        
+        # Verify make is available
+        if (Get-Command 'make' -ErrorAction SilentlyContinue) {
+          echo "Make tool is available. Version: $(make --version | Select-Object -First 1)";
         } else {
-          echo "Warning: MSYS2 installation may have failed!"
+          echo "Warning: Make tool could not be found. Will use devkitPro tools if available.";
         }
 
     - name: Set up devkitPro environment from tools directory
       shell: powershell
       run: |
         # Create devkitPro directory
-        echo "Creating C:\devkitPro directory..."
-        New-Item -ItemType Directory -Force -Path C:\devkitPro
+        echo "Creating C:\devkitPro directory...";
+        New-Item -ItemType Directory -Force -Path C:\devkitPro;
         
         # Verify files in tools directory
-        echo "Verifying files in tools directory..."
-        if (!(Test-Path -Path .\tools\devkitARM.7z)) { echo "Error: devkitARM.7z file not found!"; exit 1 }
-        if (!(Test-Path -Path .\tools\devkitPPC.7z)) { echo "Error: devkitPPC.7z file not found!"; exit 1 }
-        if (!(Test-Path -Path .\tools\libogc.7z)) { echo "Error: libogc.7z file not found!"; exit 1 }
+        echo "Verifying files in tools directory...";
+        if (!(Test-Path -Path .\tools\devkitARM.7z)) { echo "Error: devkitARM.7z file not found!"; exit 1; }
+        if (!(Test-Path -Path .\tools\devkitPPC.7z)) { echo "Error: devkitPPC.7z file not found!"; exit 1; }
+        if (!(Test-Path -Path .\tools\libogc.7z)) { echo "Error: libogc.7z file not found!"; exit 1; }
         
         # Extract devkitARM.7z from tools directory to C:\devkitPro
-        echo "Extracting devkitARM.7z..."
-        7z x -y .\tools\devkitARM.7z -oC:\devkitPro
-        if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract devkitARM.7z!"; exit 1 }
+        echo "Extracting devkitARM.7z...";
+        7z x -y .\tools\devkitARM.7z -oC:\devkitPro;
+        if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract devkitARM.7z!"; exit 1; }
         
         # Extract devkitPPC.7z from tools directory to C:\devkitPro
-        echo "Extracting devkitPPC.7z..."
-        7z x -y .\tools\devkitPPC.7z -oC:\devkitPro
-        if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract devkitPPC.7z!"; exit 1 }
+        echo "Extracting devkitPPC.7z...";
+        7z x -y .\tools\devkitPPC.7z -oC:\devkitPro;
+        if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract devkitPPC.7z!"; exit 1; }
         
         # Extract libogc.7z from tools directory to C:\devkitPro
-        echo "Extracting libogc.7z..."
-        7z x -y .\tools\libogc.7z -oC:\devkitPro
-        if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract libogc.7z!"; exit 1 }
+        echo "Extracting libogc.7z...";
+        7z x -y .\tools\libogc.7z -oC:\devkitPro;
+        if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract libogc.7z!"; exit 1; }
         
         # Display directory structure after extraction for debugging
-        echo "Directory structure of C:\devkitPro after extraction:" 
-        Get-ChildItem -Path C:\devkitPro -Recurse | Select-Object FullName | Format-Table -HideTableHeaders
+        echo "Directory structure of C:\devkitPro after extraction:";
+        Get-ChildItem -Path C:\devkitPro -Recurse | Select-Object FullName | Format-Table -HideTableHeaders;
 
     - name: Set environment variables
       shell: powershell
       run: |
         # Set environment variables
-        echo "DEVKITPRO=C:\devkitPro" | Out-File -FilePath $env:GITHUB_ENV -Append
-        echo "DEVKITARM=C:\devkitPro\devkitARM" | Out-File -FilePath $env:GITHUB_ENV -Append
-        echo "DEVKITPPC=C:\devkitPro\devkitPPC" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "DEVKITPRO=C:\devkitPro" | Out-File -FilePath $env:GITHUB_ENV -Append;
+        echo "DEVKITARM=C:\devkitPro\devkitARM" | Out-File -FilePath $env:GITHUB_ENV -Append;
+        echo "DEVKITPPC=C:\devkitPro\devkitPPC" | Out-File -FilePath $env:GITHUB_ENV -Append;
         
         # Add toolchain bin directories to PATH
-        echo "PATH=%PATH%;C:\devkitPro\devkitARM\bin;C:\devkitPro\devkitPPC\bin" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "PATH=%PATH%;C:\devkitPro\devkitARM\bin;C:\devkitPro\devkitPPC\bin" | Out-File -FilePath $env:GITHUB_ENV -Append;
         
         # Verify environment variables
-        echo "Environment variables set:"
-        echo "DEVKITPRO=$env:DEVKITPRO"
-        echo "DEVKITARM=$env:DEVKITARM"
-        echo "DEVKITPPC=$env:DEVKITPPC"
-
-    - name: Install make tool
-      shell: powershell
-      run: |
-        # Install make tool using chocolatey
-        echo "Installing make tool using chocolatey..."
-        choco install make --yes --no-progress
-        
-        # Verify make installation
-        if (Get-Command 'make' -ErrorAction SilentlyContinue) {
-          echo "Make tool installed successfully. Version: $(make --version | Select-Object -First 1)"
-          # Get make path
-          $makePath = (Get-Command 'make').Path
-          echo "Make found at: $makePath"
-        } else {
-          echo "Error: make tool could not be found after installation!"
-          exit 1
-        }
+        echo "Environment variables set:";
+        echo "DEVKITPRO=$env:DEVKITPRO";
+        echo "DEVKITARM=$env:DEVKITARM";
+        echo "DEVKITPPC=$env:DEVKITPPC";
 
     - name: Configure temporary directory
       shell: powershell
       run: |
         # Windows-specific fix: Handle temporary directory issues
-        echo "Configuring Windows-compatible temporary directory..."
+        echo "Configuring Windows-compatible temporary directory...";
         # Create a temporary directory in Windows temp folder
-        $tempDir = Join-Path $env:TEMP "nintendont_build_$(Get-Random)"
-        New-Item -ItemType Directory -Force -Path $tempDir
-        echo "Created temporary directory: $tempDir"
+        $tempDir = Join-Path $env:TEMP "nintendont_build_$(Get-Random)";
+        New-Item -ItemType Directory -Force -Path $tempDir;
+        echo "Created temporary directory: $tempDir";
         
         # Set environment variable for the temporary directory
-        $env:TMPDIR = $tempDir
-        echo "TMPDIR=$env:TMPDIR" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $env:TMPDIR = $tempDir;
+        echo "TMPDIR=$env:TMPDIR" | Out-File -FilePath $env:GITHUB_ENV -Append;
         
         # Create a physical C:\tmp directory if it doesn't exist
         if (!(Test-Path -Path "C:\tmp")) {
-          echo "Creating physical directory C:\tmp"
-          New-Item -ItemType Directory -Force -Path "C:\tmp"
+          echo "Creating physical directory C:\tmp";
+          New-Item -ItemType Directory -Force -Path "C:\tmp";
           # Ensure the directory is writable
-          icacls "C:\tmp" /grant Everyone:F /T /Q
+          icacls "C:\tmp" /grant Everyone:F /T /Q;
         }
 
     - name: Build Nintendont
       shell: powershell
       run: |
         # Display current environment variables
-        echo "Environment variables before build:"
-        echo "DEVKITPRO=$env:DEVKITPRO"
-        echo "DEVKITARM=$env:DEVKITARM"
-        echo "DEVKITPPC=$env:DEVKITPPC"
-        echo "PATH=$env:PATH"
+        echo "Environment variables before build:";
+        echo "DEVKITPRO=$env:DEVKITPRO";
+        echo "DEVKITARM=$env:DEVKITARM";
+        echo "DEVKITPPC=$env:DEVKITPPC";
+        echo "PATH=$env:PATH";
         
         # Execute make command in Windows environment with windows=1 parameter
-        echo "Compiling with make command..."
+        echo "Compiling with make command...";
         try {
           # Use SHELL=cmd.exe to force Windows-style path handling in make
-          $env:SHELL = "cmd.exe"
-          make forced windows=1 VERBOSE=1
+          $env:SHELL = "cmd.exe";
+          # Try to find make in devkitPro if not found in PATH
+          if (!(Get-Command 'make' -ErrorAction SilentlyContinue)) {
+            $devkitMake = Join-Path $env:DEVKITPRO "msys\usr\bin\make.exe";
+            if (Test-Path -Path $devkitMake) {
+              echo "Using make from devkitPro: $devkitMake";
+              & $devkitMake forced windows=1 VERBOSE=1;
+            } else {
+              echo "Error: make tool could not be found!";
+              exit 1;
+            }
+          } else {
+            make forced windows=1 VERBOSE=1;
+          }
           if ($LASTEXITCODE -ne 0) {
-            echo "Error: make command returned non-zero exit code!"
-            exit 1
+            echo "Error: make command returned non-zero exit code!";
+            exit 1;
           }
         } catch {
-          echo "Error: make command execution failed! Exception: $($_.Exception.Message)"
-          exit 1
+          echo "Error: make command execution failed! Exception: $($_.Exception.Message)";
+          exit 1;
         } finally {
           # Clean up temporary directory
-          echo "Cleaning up temporary directory: $tempDir"
-          Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+          echo "Cleaning up temporary directory: $tempDir";
+          Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue;
         }
 
     - name: Verify build output
       shell: powershell
       run: |
         # Check if loader directory exists
-        echo "Checking loader directory..."
-        if (!(Test-Path -Path .\loader)) { echo "Error: loader directory not found!"; exit 1 }
+        echo "Checking loader directory...";
+        if (!(Test-Path -Path .\loader)) { echo "Error: loader directory not found!"; exit 1; }
         
         # Check if loader.dol file was generated
         if (Test-Path -Path .\loader\loader.dol) {
-          echo "Build successful, loader.dol file has been generated!"
-          Get-ChildItem -Path .\loader\loader.dol | Select-Object FullName, Length | Format-Table
+          echo "Build successful, loader.dol file has been generated!";
+          Get-ChildItem -Path .\loader\loader.dol | Select-Object FullName, Length | Format-Table;
         } else {
-          echo "Error: loader.dol file was not generated!"; exit 1
+          echo "Error: loader.dol file was not generated!"; exit 1;
         }
 
     - name: Upload build artifact
