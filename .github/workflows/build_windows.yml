@@ -90,38 +90,44 @@ jobs:
     - name: Install make tool
       shell: powershell
       run: |
-        # Download and install make tool
-        echo "Downloading make tool..."
-        # Using a more reliable source for make tool
-        $makeExeUrl = "https://github.com/gnu-mcu-eclipse/windows-build-tools/releases/download/v2.12.1-20200511-10-g1c40a19/windows-build-tools-2.12.1-20200511-10-g1c40a19-win64.zip"
-        $makeZipPath = "${{ github.workspace }}\\make.zip"
-        $makeDir = "${{ github.workspace }}\\make"
-        $extractDir = "${{ github.workspace }}\\build-tools"
-        
-        Invoke-WebRequest -Uri $makeExeUrl -OutFile $makeZipPath
-        Expand-Archive -Path $makeZipPath -DestinationPath $extractDir -Force
-        
-        # Create directory for make and copy the executable
-        New-Item -ItemType Directory -Path $makeDir -Force
-        Copy-Item -Path "$extractDir\\*\\bin\\make.exe" -Destination $makeDir -Force
-        
-        # Add make to PATH
-        $makeExePath = "$makeDir\\make.exe"
-        if (Test-Path $makeExePath) {
-          echo "Make tool installed successfully at $makeExePath"
-          $env:PATH = "$makeDir;$env:PATH"
-        } else {
-          echo "Error: Failed to install make tool!" 
-          exit 1
-        }
-        
-        # Verify make installation (without using || operator which isn't supported in this PowerShell version)
-        echo "Verifying make installation..."
+        # Install make tool using chocolatey (available in GitHub Actions Windows runners)
+        echo "Installing make tool using chocolatey..."
         try {
-          $makeVersion = & $makeExePath --version
-          echo "Make version: $makeVersion"
+          # Check if chocolatey is available
+          if (-not (Get-Command 'choco' -ErrorAction SilentlyContinue)) {
+            echo "Chocolatey not found, installing..."
+            Set-ExecutionPolicy Bypass -Scope Process -Force
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+          }
+          
+          # Install make tool
+          choco install make --yes --no-progress
+          
+          # Verify make installation
+          echo "Verifying make installation..."
+          if (Get-Command 'make' -ErrorAction SilentlyContinue) {
+            $makeVersion = make --version
+            echo "Make tool installed successfully. Version: $makeVersion"
+          } else {
+            echo "Warning: make command not found in PATH! Trying to locate it..."
+            # Look for make in common locations
+            $possiblePaths = @(
+              "C:\ProgramData\chocolatey\bin\make.exe",
+              "C:\tools\bin\make.exe"
+            )
+            
+            foreach ($path in $possiblePaths) {
+              if (Test-Path $path) {
+                echo "Found make at $path"
+                $env:PATH = "$((Get-Item $path).Directory.FullName);$env:PATH"
+                break
+              }
+            }
+          }
         } catch {
-          echo "Warning: make version check failed!"
+          echo "Error: Failed to install make tool! Exception: $($_.Exception.Message)"
+          exit 1
         }
 
 
