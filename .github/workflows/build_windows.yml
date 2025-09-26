@@ -146,14 +146,24 @@ jobs:
         echo "DEVKITARM=C:\devkitPro\devkitARM" | Out-File -FilePath $env:GITHUB_ENV -Append;
         echo "DEVKITPPC=C:\devkitPro\devkitPPC" | Out-File -FilePath $env:GITHUB_ENV -Append;
         
+        # 明确设置MAKE环境变量，指向已安装的make工具路径
+        # 这确保在构建过程中能正确找到make工具
+        if (Get-Command 'make' -ErrorAction SilentlyContinue) {
+          $makePath = (Get-Command 'make').Path
+          echo "MAKE=$makePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "MAKE工具路径已设置为: $makePath"
+        }
+        
         # Add toolchain bin directories to PATH
-        echo "PATH=%PATH%;C:\devkitPro\devkitARM\bin;C:\devkitPro\devkitPPC\bin" | Out-File -FilePath $env:GITHUB_ENV -Append;
+        # 明确添加mingw64的bin路径，确保make工具可以被找到
+        echo "PATH=%PATH%;C:\mingw64\bin;C:\devkitPro\devkitARM\bin;C:\devkitPro\devkitPPC\bin" | Out-File -FilePath $env:GITHUB_ENV -Append;
         
         # Verify environment variables
         echo "Environment variables set:";
         echo "DEVKITPRO=$env:DEVKITPRO";
         echo "DEVKITARM=$env:DEVKITARM";
         echo "DEVKITPPC=$env:DEVKITPPC";
+        if (Test-Path env:MAKE) { echo "MAKE=$env:MAKE"; }
 
     # - name: Configure temporary directory
     #   shell: powershell
@@ -204,14 +214,27 @@ jobs:
         echo "PATH=$env:PATH";
         echo "TMP=$env:TMP";
         echo "TMPDIR=$env:TMPDIR";
+        if (Test-Path env:MAKE) { echo "MAKE=$env:MAKE"; }
         
         # Execute make command in Windows environment with windows=1 parameter
         echo "Compiling with make command...";
         try {
           # Use SHELL=cmd.exe to force Windows-style path handling in make
           $env:SHELL = "cmd.exe";
-          # Try to find make in devkitPro if not found in PATH
-          if (!(Get-Command 'make' -ErrorAction SilentlyContinue)) {
+          
+          # 优先使用环境变量中明确设置的MAKE路径
+          if (Test-Path env:MAKE -and (Test-Path $env:MAKE)) {
+            echo "Using make from MAKE environment variable: $env:MAKE";
+            & $env:MAKE forced windows=1 VERBOSE=1;
+          } 
+          # 其次检查PATH中的make命令
+          elseif (Get-Command 'make' -ErrorAction SilentlyContinue) {
+            $makePath = (Get-Command 'make').Path
+            echo "Using make from PATH: $makePath";
+            make forced windows=1 VERBOSE=1;
+          }
+          # 最后尝试在devkitPro中查找make
+          else {
             $devkitMake = Join-Path $env:DEVKITPRO "msys\usr\bin\make.exe";
             if (Test-Path -Path $devkitMake) {
               echo "Using make from devkitPro: $devkitMake";
@@ -220,8 +243,6 @@ jobs:
               echo "Error: make tool could not be found!";
               exit 1;
             }
-          } else {
-            make forced windows=1 VERBOSE=1;
           }
           if ($LASTEXITCODE -ne 0) {
             echo "Error: make command returned non-zero exit code!";
