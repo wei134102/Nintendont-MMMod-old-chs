@@ -148,8 +148,9 @@ jobs:
         
         # Verify make is in PATH
         echo "Checking for make in PATH..."
-        where.exe make > $null 2>&1
-        if ($LASTEXITCODE -ne 0) { echo "Warning: make not found in PATH!" }
+        if (-not (Get-Command 'make' -ErrorAction SilentlyContinue)) {
+          echo "Warning: make not found in PATH!"
+        }
         
         # Execute make command in Windows environment with windows=1 parameter
         echo "Compiling with make command, passing windows=1 parameter..."
