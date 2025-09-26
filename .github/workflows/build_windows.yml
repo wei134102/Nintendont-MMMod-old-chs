@@ -234,16 +234,25 @@ jobs:
             make forced windows=1 VERBOSE=1;
           }
           # Finally try to find make in devkitPro
-          else {
-            $devkitMake = Join-Path $env:DEVKITPRO "msys\usr\bin\make.exe";
-            if (Test-Path -Path $devkitMake) {
-              Write-Host "Using make from devkitPro: $devkitMake";
-              & $devkitMake forced windows=1 VERBOSE=1;
-            } else {
-              Write-Host "Error: make tool could not be found!";
-              exit 1;
+            else {
+              # Try msys2 first (matching local installation)
+              $devkitMake = Join-Path $env:DEVKITPRO "msys2\usr\bin\make.exe";
+              if (Test-Path -Path $devkitMake) {
+                Write-Host "Using make from devkitPro msys2: $devkitMake";
+                & $devkitMake forced windows=1 VERBOSE=1;
+              } 
+              # Fallback to msys for compatibility
+              else {
+                $devkitMake = Join-Path $env:DEVKITPRO "msys\usr\bin\make.exe";
+                if (Test-Path -Path $devkitMake) {
+                  Write-Host "Using make from devkitPro msys: $devkitMake";
+                  & $devkitMake forced windows=1 VERBOSE=1;
+                } else {
+                  Write-Host "Error: make tool could not be found!";
+                  exit 1;
+                }
+              }
             }
-          }
           if ($LASTEXITCODE -ne 0) {
             Write-Host "Error: Build failed!";
             exit 1;
