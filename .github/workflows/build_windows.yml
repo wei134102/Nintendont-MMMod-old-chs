@@ -40,19 +40,29 @@ jobs:
         if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract devkitARM.7z!"; exit 1 }
         
         # Extract devkitPPC.7z from tools directory to C:\devkitPro
-        echo "Extracting devkitPPC.7z..."
+        # Note: devkitppc-rules is already included in devkitPPC.7z
+        echo "Extracting devkitPPC.7z..."  
         7z x -y .\tools\devkitPPC.7z -oC:\devkitPro
         if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract devkitPPC.7z!"; exit 1 }
         
         # Extract libogc.7z from tools directory to C:\devkitPro
-        echo "Extracting libogc.7z..."
+        echo "Extracting libogc.7z..."  
         7z x -y .\tools\libogc.7z -oC:\devkitPro
         if ($LASTEXITCODE -ne 0) { echo "Error: Failed to extract libogc.7z!"; exit 1 }
         
         # Display directory structure after extraction for debugging
         echo "Directory structure of C:\devkitPro after extraction:" 
         Get-ChildItem -Path C:\devkitPro -Recurse | Select-Object FullName | Format-Table -HideTableHeaders
-    
+
+        # Verify devkitppc-rules is present in devkitPPC directory
+        echo "Verifying devkitppc-rules in devkitPPC directory..." 
+        $rulesPath = "C:\devkitPro\devkitPPC\rules"
+        if (Test-Path -Path $rulesPath) { 
+            echo "✓ devkitppc-rules found at $rulesPath" 
+        } else { 
+            echo "Warning: devkitppc-rules not found at $rulesPath!" 
+        }
+
     - name: Set environment variables
       shell: powershell
       run: |
@@ -152,7 +162,7 @@ jobs:
         }
     
     - name: Upload build artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: nintendont-loader
         path: loader\loader.dol
