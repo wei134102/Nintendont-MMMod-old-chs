@@ -241,12 +241,25 @@ jobs:
         $env:TMPDIR = $tempDir
         echo "TMPDIR=$env:TMPDIR" | Out-File -FilePath $env:GITHUB_ENV -Append
         
+        # Add more debugging about the paths being used
+        echo "Current environment paths:"
+        echo "TEMP=$env:TEMP"
+        echo "TMP=$env:TMP"
+        echo "TMPDIR=$env:TMPDIR"
+        echo "Current working directory: $(Get-Location)"
+        
         # Create a physical C:\tmp directory if it doesn't exist
         # This will provide a /tmp path that works in MinGW
         if (!(Test-Path -Path "C:\tmp")) {
           echo "Creating physical directory C:\tmp"
           New-Item -ItemType Directory -Force -Path "C:\tmp"
+          # Ensure the directory is writable
+          icacls "C:\tmp" /grant Everyone:F /T /Q
         }
+        
+        # Make sure the temporary directory is writable
+        echo "Setting permissions on temporary directory"
+        icacls $tempDir /grant Everyone:F /T /Q
         
         # Create a symlink for /tmp to Windows temp directory if possible
         # This may require elevated permissions, but we already created the physical directory
@@ -257,6 +270,17 @@ jobs:
           }
         } catch {
           echo "Warning: Could not create symlink for /tmp, but physical directory exists. Build may still work."
+        }
+        
+        # Additional debug: Show what C:\tmp actually is
+        $tmpDirInfo = Get-Item -Path "C:\tmp" -ErrorAction SilentlyContinue
+        if ($tmpDirInfo) {
+          echo "C:\tmp type: $($tmpDirInfo.GetType().Name)"
+          if ($tmpDirInfo.LinkType) {
+            echo "C:\tmp symlink target: $($tmpDirInfo.Target)"
+          }
+          echo "C:\tmp permissions:"
+          icacls "C:\tmp" | Write-Output
         }
         
         # Execute make command in Windows environment with windows=1 parameter and verbose output
